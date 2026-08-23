@@ -1,0 +1,121 @@
+{
+  "algorithm": "RandomForestClassifier (scikit-learn)",
+  "hyperparameters": {
+    "max_depth": 10,
+    "min_samples_leaf": 2,
+    "n_estimators": 150
+  },
+  "dataset_path": "app/ml/data/c2_quality_dataset.csv",
+  "label_order": [
+    "Low",
+    "Medium",
+    "High"
+  ],
+  "training_samples": 800,
+  "test_samples": 200,
+  "cv_accuracy_mean": 0.98375,
+  "cv_accuracy_std": 0.010155048005794965,
+  "accuracy": 0.98,
+  "precision_macro": 0.9696969696969697,
+  "recall_macro": 0.9858156028368795,
+  "f1_macro": 0.97688060731539,
+  "per_class_metrics": [
+    {
+      "label": "Low",
+      "precision": 1.0,
+      "recall": 0.9574468085106383,
+      "f1": 0.9782608695652174,
+      "support": 94
+    },
+    {
+      "label": "Medium",
+      "precision": 0.9090909090909091,
+      "recall": 1.0,
+      "f1": 0.9523809523809523,
+      "support": 40
+    },
+    {
+      "label": "High",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 66
+    }
+  ],
+  "confusion_matrix": [
+    [
+      90,
+      4,
+      0
+    ],
+    [
+      0,
+      40,
+      0
+    ],
+    [
+      0,
+      0,
+      66
+    ]
+  ],
+  "confusion_matrix_labels": [
+    "Low",
+    "Medium",
+    "High"
+  ],
+  "feature_importances": [
+    {
+      "feature": "description_length",
+      "label": "Description Length",
+      "importance": 0.2121878456371103
+    },
+    {
+      "feature": "has_expected_result",
+      "label": "Has Expected Result",
+      "importance": 0.03517627469640537
+    },
+    {
+      "feature": "has_preconditions",
+      "label": "Has Preconditions",
+      "importance": 0.009665406496599476
+    },
+    {
+      "feature": "has_test_steps",
+      "label": "Has Test Steps",
+      "importance": 0.013855017556605422
+    },
+    {
+      "feature": "requirement_linked",
+      "label": "Requirement Linked",
+      "importance": 0.053792658362716086
+    },
+    {
+      "feature": "requirement_coverage",
+      "label": "Requirement Coverage",
+      "importance": 0.26721175111598666
+    },
+    {
+      "feature": "ambiguity_score",
+      "label": "Ambiguity Score",
+      "importance": 0.10023877060502862
+    },
+    {
+      "feature": "completeness_score",
+      "label": "Completeness Score",
+      "importance": 0.1751388992280794
+    },
+    {
+      "feature": "specificity_score",
+      "label": "Specificity Score",
+      "importance": 0.13028051394438028
+    },
+    {
+      "feature": "test_result",
+      "label": "Test Result (Pass/Fail)",
+      "importance": 0.0024528623570885407
+    }
+  ],
+  "trained_at": "2026-08-20T16:30:40.627217+00:00",
+  "notes": "Trained to predict test-case QUALITY (High/Medium/Low), not test execution outcome: the label comes from a weighted formula over completeness, requirement coverage, specificity, expected-result/precondition/step presence, and (low) ambiguity -- never from PASS/FAIL. PASS/FAIL is included only as the `test_result` feature, deliberately given a weak, imperfect correlation with quality in the synthetic portion of the dataset so the model cannot use it as a shortcut label proxy."
+}
