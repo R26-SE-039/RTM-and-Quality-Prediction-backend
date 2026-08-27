@@ -12,7 +12,7 @@ import os
 import httpx
 
 COMPONENT1_API_URL = os.getenv("COMPONENT1_API_URL", "http://localhost:8001")
-_TIMEOUT = 5.0
+_TIMEOUT = 15.0
 
 
 class Component1Unavailable(Exception):

@@ -17,7 +17,9 @@ COMPONENT2_API_URL = os.getenv("COMPONENT2_API_URL", "http://localhost:8002/api/
 # in Component 2's backend .env) — used only to fetch the decrypted GitHub
 # credentials of the open project for the code-coverage clone.
 C2_INTERNAL_KEY = os.getenv("C2_INTERNAL_KEY", "")
-_TIMEOUT = 5.0
+# C2 runs on the same host but its DB is Neon Cloud — multi-table reads like
+# /traceability take seconds, not milliseconds.
+_TIMEOUT = 30.0
 _SCENARIO_TITLE_RE = re.compile(r"^\s*Scenario(?: Outline)?:\s*(.+)$", re.MULTILINE)
 
 
@@ -175,7 +177,11 @@ async def get_traceability_test_cases(project_id: str, iteration_id: str | None 
     provides) -> that suite's executions' scenario_results (matched to this
     gherkin's scenario titles — see _match_gherkin_status).
     """
-    params = {"iteration_id": iteration_id} if iteration_id else None
+    # light=true skips suite source code / raw logs / artifacts server-side —
+    # this join only needs ids, gherkin texts, and scenario results.
+    params: dict = {"light": "true"}
+    if iteration_id:
+        params["iteration_id"] = iteration_id
     data = await _get(f"/projects/{project_id}/traceability", params=params)
 
     suite_scenario_ids: dict[str, set[str]] = {
