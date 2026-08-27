@@ -184,14 +184,22 @@ async def get_traceability_test_cases(project_id: str, iteration_id: str | None 
         params["iteration_id"] = iteration_id
     data = await _get(f"/projects/{project_id}/traceability", params=params)
 
+    # Only ACTIVE suites (the head of each framework's version chain) decide
+    # pass/fail — superseded versions keep their old failures forever and
+    # would mark a since-fixed test as failing.
     suite_scenario_ids: dict[str, set[str]] = {
-        suite["id"]: set(suite.get("source_scenario_ids") or []) for suite in data.get("suites", [])
+        suite["id"]: set(suite.get("source_scenario_ids") or [])
+        for suite in data.get("suites", [])
+        if suite.get("is_active")
     }
-    results_by_suite: dict[str, list[dict]] = defaultdict(list)
+    # Only the LATEST execution per suite decides pass/fail (C2 returns
+    # executions newest-first) — otherwise one historical failure would mark
+    # a since-fixed test as failing forever.
+    results_by_suite: dict[str, list[dict]] = {}
     for execution in data.get("executions", []):
         suite_id = execution.get("suite_id")
-        if suite_id:
-            results_by_suite[suite_id].extend(execution.get("scenario_results") or [])
+        if suite_id and suite_id not in results_by_suite:
+            results_by_suite[suite_id] = execution.get("scenario_results") or []
 
     test_cases: list[dict] = []
     for story in data.get("stories", []):
