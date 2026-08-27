@@ -3,6 +3,8 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 from app.database import Base, engine
 from app.routers import (
@@ -39,7 +41,22 @@ def on_startup():
 @app.get("/health")
 @app.get("/api/health")
 def health():
-    return {"status": "ok"}
+    """Readiness probe: 'ok' only when the Neon DB is actually reachable.
+
+    Used by the gateway's /health/services aggregation, the Docker
+    HEALTHCHECK, and the frontend Service Status page — so a green status
+    means the service can really serve requests, not just that the process
+    is up.
+    """
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return {"status": "ok", "database": "up"}
+    except Exception as exc:  # pragma: no cover - defensive
+        return JSONResponse(
+            status_code=503,
+            content={"status": "degraded", "database": "down", "detail": str(exc)},
+        )
 
 
 app.include_router(rtm.router)
