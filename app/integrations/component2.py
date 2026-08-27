@@ -13,6 +13,10 @@ from collections import defaultdict
 import httpx
 
 COMPONENT2_API_URL = os.getenv("COMPONENT2_API_URL", "http://localhost:8002/api/v1")
+# Shared secret for C2's internal endpoints (must match NEXTGENQA_INTERNAL_KEY
+# in Component 2's backend .env) — used only to fetch the decrypted GitHub
+# credentials of the open project for the code-coverage clone.
+C2_INTERNAL_KEY = os.getenv("C2_INTERNAL_KEY", "")
 _TIMEOUT = 5.0
 _SCENARIO_TITLE_RE = re.compile(r"^\s*Scenario(?: Outline)?:\s*(.+)$", re.MULTILINE)
 
@@ -21,11 +25,11 @@ class Component2Unavailable(Exception):
     """Raised when Component 2's API can't be reached or returns an error."""
 
 
-async def _get(path: str, params: dict | None = None):
+async def _get(path: str, params: dict | None = None, headers: dict | None = None):
     url = f"{COMPONENT2_API_URL}{path}"
     try:
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            response = await client.get(url, params=params)
+            response = await client.get(url, params=params, headers=headers)
         response.raise_for_status()
         return response.json()
     except (httpx.HTTPError, httpx.InvalidURL) as e:
@@ -58,6 +62,32 @@ async def get_risk(project_id: str) -> dict:
 
 async def get_failed_tests(project_id: str, limit: int = 20) -> dict:
     return await _get(f"/projects/{project_id}/failed-tests", params={"limit": limit})
+
+
+async def get_github_connection(project_id: str) -> dict | None:
+    """Public (masked) metadata of the project's GitHub connection in C2 —
+    owner/repo/branch/token_preview, never the token. None when the project
+    has no connection or C2 is unreachable."""
+    try:
+        return await _get(f"/projects/{project_id}/github/connection")
+    except Component2Unavailable:
+        return None
+
+
+async def get_github_credentials(project_id: str) -> dict | None:
+    """Decrypted clone credentials from C2's internal endpoint (guarded by
+    the shared X-Internal-Key). Returns {owner, repo, repo_full,
+    default_branch, token} or None when there is no connection, the key is
+    not configured/accepted, or C2 is unreachable."""
+    if not C2_INTERNAL_KEY:
+        return None
+    try:
+        return await _get(
+            f"/projects/{project_id}/github/credentials",
+            headers={"X-Internal-Key": C2_INTERNAL_KEY},
+        )
+    except Component2Unavailable:
+        return None
 
 
 async def get_test_cases(project_id: str, run_sample: int = 3) -> list[dict]:

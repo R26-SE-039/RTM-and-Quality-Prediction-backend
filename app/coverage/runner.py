@@ -42,12 +42,12 @@ def _aggregate(results: list[dict]) -> dict:
     }
 
 
-def _run_coverage_tool(repo_url: str, repo_meta: dict, log_fn) -> dict:
+def _run_coverage_tool(repo_url: str, repo_meta: dict, log_fn, username: str | None = None, token: str | None = None) -> dict:
     owner = repo_meta.get("owner", {}).get("login")
     repo = repo_meta.get("name")
 
     log_fn("info", "Step 1: Cloning repository...")
-    repo_dir = clone.clone_repo(owner, repo)
+    repo_dir = clone.clone_repo(owner, repo, username=username, token=token)
     log_fn("success", "Repository cloned successfully.")
 
     try:
@@ -108,25 +108,31 @@ def _run_coverage_tool(repo_url: str, repo_meta: dict, log_fn) -> dict:
         clone.cleanup(repo_dir)
 
 
-def run_coverage_job(repo_url: str, repo_meta: dict) -> None:
+def run_coverage_job(
+    project_id: str,
+    repo_url: str,
+    repo_meta: dict,
+    username: str | None = None,
+    token: str | None = None,
+) -> None:
     db = SessionLocal()
 
     def log_fn(level: str, message: str) -> None:
-        state.append_log(db, level, message)
+        state.append_log(db, project_id, level, message)
 
     try:
         try:
-            result = _run_coverage_tool(repo_url, repo_meta, log_fn)
+            result = _run_coverage_tool(repo_url, repo_meta, log_fn, username=username, token=token)
         except (clone.CloneError, UnsupportedLanguage, CoverageRunError) as e:
             logger.info("Coverage run failed for %s: %s", repo_url, e.message)
             log_fn("error", f"Error: {e.message}")
             log_fn("tip", "Tip: check the repository has a recognizable Python, JS/TS, or Java test setup.")
-            state.set_status(db, models.CoverageJobStatus.ERROR, repo_url=repo_url, error_message=e.message)
+            state.set_status(db, project_id, models.CoverageJobStatus.ERROR, repo_url=repo_url, error_message=e.message)
             return
         except Exception as e:  # noqa: BLE001 - surface any unexpected tool failure to the UI
             logger.exception("Coverage run failed unexpectedly for %s", repo_url)
             log_fn("error", f"Unexpected error: {e}")
-            state.set_status(db, models.CoverageJobStatus.ERROR, repo_url=repo_url, error_message=str(e))
+            state.set_status(db, project_id, models.CoverageJobStatus.ERROR, repo_url=repo_url, error_message=str(e))
             return
 
         log_fn(
@@ -135,6 +141,7 @@ def run_coverage_job(repo_url: str, repo_meta: dict) -> None:
         )
         state.save_result(
             db,
+            project_id,
             result["statement_coverage"],
             result["branch_coverage"],
             result["overall_coverage"],
@@ -142,4 +149,4 @@ def run_coverage_job(repo_url: str, repo_meta: dict) -> None:
         )
     finally:
         db.close()
-        state.release_run_lock()
+        state.release_run_lock(project_id)

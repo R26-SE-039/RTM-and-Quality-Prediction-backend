@@ -37,9 +37,9 @@ def parse_repo_url(repo_url: str) -> tuple[str, str]:
     return match.group("owner"), match.group("repo")
 
 
-def _headers() -> dict:
+def _headers(token: str | None = None) -> dict:
     return {
-        "Authorization": f"Bearer {config.settings.github_token}",
+        "Authorization": f"Bearer {token or config.settings.github_token}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
     }
@@ -62,11 +62,11 @@ def get_authenticated_user(client: httpx.Client | None = None) -> dict:
             client.close()
 
 
-def get_repo(owner: str, repo: str, client: httpx.Client | None = None) -> dict:
+def get_repo(owner: str, repo: str, client: httpx.Client | None = None, token: str | None = None) -> dict:
     owns_client = client is None
     client = client or httpx.Client(timeout=15.0)
     try:
-        resp = client.get(f"{GITHUB_API}/repos/{owner}/{repo}", headers=_headers())
+        resp = client.get(f"{GITHUB_API}/repos/{owner}/{repo}", headers=_headers(token))
         if resp.status_code == 404:
             raise GitHubAPIError(
                 f"Repository '{owner}/{repo}' was not found (or the token has no access to it).",
