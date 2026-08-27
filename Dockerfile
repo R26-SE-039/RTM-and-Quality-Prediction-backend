@@ -5,7 +5,7 @@
 # via COVERAGE_ENABLED=false, so the image stays small. All Python deps are
 # manylinux wheels (psycopg2-binary bundles libpq), so no build toolchain is
 # needed.
-FROM python:3.10-slim
+FROM python:3.12-slim
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1
 
