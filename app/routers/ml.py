@@ -10,38 +10,8 @@ from app.ml.c2_improve import analyze_gaps, generate_improved_gherkin
 from app.ml.c2_predict import get_dataset_sample_predictions
 from app.ml.c2_predict import get_model_info as get_c2_model_info
 from app.ml.c2_predict import predict_c2_quality
-from app.ml.dataset_info import get_dataset_info
-from app.ml.predict import get_model_info
 
 router = APIRouter(prefix="/api/ml", tags=["ml"])
-
-
-@router.get("/model-info", response_model=schemas.ModelInfoOut)
-def model_info():
-    info = get_model_info()
-    if not info.get("trained"):
-        return schemas.ModelInfoOut(
-            trained=False,
-            algorithm="Weighted formula (fallback — no trained model found)",
-            hyperparameters={},
-            training_samples=0,
-            test_samples=0,
-            mae=0.0,
-            rmse=0.0,
-            r2=0.0,
-            cv_mae_mean=0.0,
-            cv_mae_std=0.0,
-            feature_importances=[],
-            quality_reject_threshold=0.0,
-            trained_at=None,
-            notes="Run `python -m app.ml.train_model` to train and persist the model.",
-        )
-    return schemas.ModelInfoOut(**info)
-
-
-@router.get("/dataset-info", response_model=schemas.DatasetInfoOut)
-def dataset_info():
-    return schemas.DatasetInfoOut(**get_dataset_info())
 
 
 # ---------- Component 2 test-case quality (Random Forest research pipeline) ----------

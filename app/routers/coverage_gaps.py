@@ -28,8 +28,12 @@ from app.ml.c2_predict import predict_c2_quality
 router = APIRouter(prefix="/api/rtm/c2-gaps", tags=["coverage-gaps"])
 
 
-def _latest_code_coverage_pct(db: Session) -> float | None:
-    report = db.query(models.CoverageReport).first()
+def _latest_code_coverage_pct(db: Session, project_id: str) -> float | None:
+    report = (
+        db.query(models.CoverageReport)
+        .filter(models.CoverageReport.project_id == project_id)
+        .first()
+    )
     if report is None or report.status != models.CoverageJobStatus.DONE:
         return None
     return report.overall_coverage
@@ -51,7 +55,7 @@ async def list_coverage_gaps(project_id: str, iteration_id: str, db: Session = D
     for tc in test_cases:
         tests_by_story.setdefault(tc["story_id"], []).append(tc)
 
-    code_coverage_pct = _latest_code_coverage_pct(db)
+    code_coverage_pct = _latest_code_coverage_pct(db, project_id)
 
     results = []
     for item in requirements:
@@ -145,6 +149,7 @@ def _get_or_create_generated(db: Session, payload: schemas.GenerateGapTestCaseRe
     existing = (
         db.query(models.GeneratedGapTestCase)
         .filter(
+            models.GeneratedGapTestCase.project_id == payload.project_id,
             models.GeneratedGapTestCase.requirement_id == payload.requirement_id,
             models.GeneratedGapTestCase.acceptance_criterion == payload.acceptance_criterion,
         )
@@ -160,6 +165,7 @@ def _get_or_create_generated(db: Session, payload: schemas.GenerateGapTestCaseRe
         acceptance_criterion=payload.acceptance_criterion,
     )
     row = models.GeneratedGapTestCase(
+        project_id=payload.project_id,
         requirement_id=payload.requirement_id,
         requirement_text=payload.requirement_text,
         user_story_id=payload.user_story_id,
@@ -178,6 +184,7 @@ def _get_or_create_generated(db: Session, payload: schemas.GenerateGapTestCaseRe
         row = (
             db.query(models.GeneratedGapTestCase)
             .filter(
+                models.GeneratedGapTestCase.project_id == payload.project_id,
                 models.GeneratedGapTestCase.requirement_id == payload.requirement_id,
                 models.GeneratedGapTestCase.acceptance_criterion == payload.acceptance_criterion,
             )
@@ -222,13 +229,16 @@ def add_generated_test_case(gap_test_case_id: int, payload: schemas.AddGapTestCa
 
 
 @router.get("/generated", response_model=list[schemas.GeneratedGapTestCasePredictionOut])
-def list_generated_test_cases(db: Session = Depends(get_db)):
+def list_generated_test_cases(project_id: str, db: Session = Depends(get_db)):
     """Generated test cases that have been added to at least one of Test
     Inventory / RTM — consumed by those pages to merge them in alongside
     their live Component 1/2 data."""
     rows = (
         db.query(models.GeneratedGapTestCase)
-        .filter(or_(models.GeneratedGapTestCase.added_to_inventory.is_(True), models.GeneratedGapTestCase.added_to_rtm.is_(True)))
+        .filter(
+            models.GeneratedGapTestCase.project_id == project_id,
+            or_(models.GeneratedGapTestCase.added_to_inventory.is_(True), models.GeneratedGapTestCase.added_to_rtm.is_(True)),
+        )
         .order_by(models.GeneratedGapTestCase.created_at.desc())
         .all()
     )
