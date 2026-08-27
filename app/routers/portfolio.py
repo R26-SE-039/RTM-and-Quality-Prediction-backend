@@ -1,29 +1,32 @@
+"""Test Portfolio Optimization over the live test set: redundant (near
+duplicates within a story), critical (sole/failing tests on Must-Should
+requirements), and weak (model-rated Low) test cases."""
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app import schemas, services
 from app.database import get_db
+from app.ml.c2_features import extract_features
+from app.ml.c2_predict import predict_c2_quality
 
 router = APIRouter(prefix="/api/portfolio", tags=["portfolio"])
 
 
 @router.get("/analysis", response_model=schemas.PortfolioAnalysisOut)
-def get_portfolio_analysis(db: Session = Depends(get_db)):
-    grouped = services.analyze_portfolio(db)
+async def get_portfolio_analysis(project_id: str, iteration_id: str, db: Session = Depends(get_db)):
+    matrix = await services.build_matrix(db, project_id, iteration_id)
 
-    def to_out(actions):
-        return [
-            schemas.PortfolioActionOut(
-                test_case_id=a.test_case_id,
-                test_title=a.test_case.title,
-                action_type=a.action_type,
-                reason=a.reason,
+    quality_by_test: dict[str, dict] = {}
+    for row in matrix.rows:
+        for test in row.tests:
+            if test.id in quality_by_test:
+                continue
+            features = extract_features(
+                {"id": test.id, "title": test.title, "description": test.description, "status": test.status},
+                requirement_linked=True,
+                acceptance_criteria=row.acceptance_criteria,
             )
-            for a in actions
-        ]
+            quality_by_test[test.id] = predict_c2_quality(features)
 
-    return schemas.PortfolioAnalysisOut(
-        redundant=to_out(grouped["redundant"]),
-        critical=to_out(grouped["critical"]),
-        weak=to_out(grouped["weak"]),
-    )
+    return services.analyze_portfolio(matrix.rows, quality_by_test)

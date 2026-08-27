@@ -26,14 +26,23 @@ class CloneError(Exception):
         self.message = message
 
 
-def clone_repo(owner: str, repo: str, timeout: int | None = None) -> str:
+def clone_repo(
+    owner: str,
+    repo: str,
+    timeout: int | None = None,
+    username: str | None = None,
+    token: str | None = None,
+) -> str:
+    """Clone with either explicit credentials (the open project's GitHub
+    connection fetched from Component 2) or, when omitted, the backend-wide
+    GITHUB_USERNAME/GITHUB_TOKEN env fallback."""
     timeout = timeout or config.settings.coverage_job_timeout_seconds
+    username = username or config.settings.github_username
+    token = token if token is not None else config.settings.github_token
     repo_dir = tempfile.mkdtemp(prefix="rtm-coverage-")
     url = f"https://github.com/{owner}/{repo}.git"
 
-    basic_credentials = base64.b64encode(
-        f"{config.settings.github_username}:{config.settings.github_token}".encode()
-    ).decode()
+    basic_credentials = base64.b64encode(f"{username}:{token}".encode()).decode()
     auth_header = f"Authorization: Basic {basic_credentials}"
 
     env = os.environ.copy()
@@ -64,8 +73,8 @@ def clone_repo(owner: str, repo: str, timeout: int | None = None) -> str:
     if result.returncode != 0:
         shutil.rmtree(repo_dir, ignore_errors=True)
         stderr = result.stderr
-        if config.settings.github_token:
-            stderr = stderr.replace(config.settings.github_token, "***")
+        if token:
+            stderr = stderr.replace(token, "***")
         stderr = stderr.replace(basic_credentials, "***")
         raise CloneError(f"git clone failed for {owner}/{repo}: {stderr.strip()[-500:]}")
 

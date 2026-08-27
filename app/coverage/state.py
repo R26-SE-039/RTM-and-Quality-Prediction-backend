@@ -6,55 +6,71 @@ from sqlalchemy.orm import Session
 
 from app import models
 
-_run_lock = threading.Lock()
-
-# CoverageReport is meant to be a singleton row (see its docstring), but
-# get_or_create_report() used to do a plain "SELECT ... LIMIT 1, insert if
-# none found" without an explicit order or any uniqueness guarantee -- two
-# concurrent requests (e.g. the frontend polling /status while a fresh
-# /analyze POST lands) could both see "no row" and each insert one,
-# producing two rows that then get read inconsistently depending on which
-# one an unordered .first() happens to return, making the job look stuck.
-# Pinning the row to a fixed primary key makes "get or create" atomic at the
-# database level: a second concurrent insert simply fails its PK constraint
-# instead of creating a duplicate.
-_SINGLETON_ID = 1
+# One coverage run at a time per project. The registry itself is guarded so
+# two first-time requests for the same project can't each create a lock.
+_locks_guard = threading.Lock()
+_run_locks: dict[str, threading.Lock] = {}
 
 
-def is_run_in_progress() -> bool:
-    return _run_lock.locked()
+def _lock_for(project_id: str) -> threading.Lock:
+    with _locks_guard:
+        lock = _run_locks.get(project_id)
+        if lock is None:
+            lock = threading.Lock()
+            _run_locks[project_id] = lock
+        return lock
 
 
-def try_acquire_run_lock() -> bool:
-    return _run_lock.acquire(blocking=False)
+def is_run_in_progress(project_id: str) -> bool:
+    return _lock_for(project_id).locked()
 
 
-def release_run_lock() -> None:
-    if _run_lock.locked():
-        _run_lock.release()
+def try_acquire_run_lock(project_id: str) -> bool:
+    return _lock_for(project_id).acquire(blocking=False)
 
 
-def get_or_create_report(db: Session) -> models.CoverageReport:
-    report = db.get(models.CoverageReport, _SINGLETON_ID)
+def release_run_lock(project_id: str) -> None:
+    lock = _lock_for(project_id)
+    if lock.locked():
+        lock.release()
+
+
+def get_or_create_report(db: Session, project_id: str) -> models.CoverageReport:
+    """Get-or-create the project's single report row. The UNIQUE constraint
+    on project_id makes the create atomic: a concurrent duplicate insert
+    fails the constraint instead of producing a second row."""
+    report = (
+        db.query(models.CoverageReport)
+        .filter(models.CoverageReport.project_id == project_id)
+        .first()
+    )
     if report is not None:
         return report
 
-    report = models.CoverageReport(id=_SINGLETON_ID)
+    report = models.CoverageReport(project_id=project_id)
     db.add(report)
     try:
         db.commit()
     except IntegrityError:
-        # Lost the race to another concurrent request that inserted the
-        # singleton row first -- that's fine, just read what it wrote.
         db.rollback()
-        report = db.get(models.CoverageReport, _SINGLETON_ID)
+        report = (
+            db.query(models.CoverageReport)
+            .filter(models.CoverageReport.project_id == project_id)
+            .first()
+        )
     else:
         db.refresh(report)
     return report
 
 
-def set_status(db: Session, status: models.CoverageJobStatus, repo_url: str | None = None, error_message: str | None = None) -> models.CoverageReport:
-    report = get_or_create_report(db)
+def set_status(
+    db: Session,
+    project_id: str,
+    status: models.CoverageJobStatus,
+    repo_url: str | None = None,
+    error_message: str | None = None,
+) -> models.CoverageReport:
+    report = get_or_create_report(db, project_id)
     report.status = status
     if repo_url is not None:
         report.repo_url = repo_url
@@ -64,16 +80,16 @@ def set_status(db: Session, status: models.CoverageJobStatus, repo_url: str | No
     return report
 
 
-def reset_logs(db: Session) -> models.CoverageReport:
-    report = get_or_create_report(db)
+def reset_logs(db: Session, project_id: str) -> models.CoverageReport:
+    report = get_or_create_report(db, project_id)
     report.logs = []
     db.commit()
     db.refresh(report)
     return report
 
 
-def append_log(db: Session, level: str, message: str) -> models.CoverageReport:
-    report = get_or_create_report(db)
+def append_log(db: Session, project_id: str, level: str, message: str) -> models.CoverageReport:
+    report = get_or_create_report(db, project_id)
     logs = list(report.logs or [])
     logs.append(
         {
@@ -90,12 +106,13 @@ def append_log(db: Session, level: str, message: str) -> models.CoverageReport:
 
 def save_result(
     db: Session,
+    project_id: str,
     statement_coverage: float,
     branch_coverage: float,
     overall_coverage: float,
     files: list[dict],
 ) -> models.CoverageReport:
-    report = get_or_create_report(db)
+    report = get_or_create_report(db, project_id)
     report.status = models.CoverageJobStatus.DONE
     report.error_message = None
     report.statement_coverage = statement_coverage
