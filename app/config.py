@@ -15,6 +15,12 @@ class Settings(BaseSettings):
 
     github_username: str = ""
     github_token: str = ""
+    # When false, the code-coverage runners (Java/Maven+JaCoCo, JS, Python)
+    # are turned off and POST /api/coverage/analyze returns 503. Set
+    # COVERAGE_ENABLED=false in deployments whose image doesn't ship the
+    # build toolchains (e.g. the small AWS box). Defaults to true so local
+    # dev is unchanged.
+    coverage_enabled: bool = True
     coverage_job_timeout_seconds: int = 300
     # Optional: force a specific JDK for Java coverage runs (Maven/Gradle +
     # JaCoCo), overriding the auto-detected one. Useful if the backend host's

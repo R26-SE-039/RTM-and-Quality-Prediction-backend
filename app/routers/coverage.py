@@ -33,6 +33,14 @@ def _fail(db: Session, project_id: str, repo_url: str, message: str, status_code
 
 @router.post("/analyze", response_model=schemas.CoverageStatusOut, status_code=202)
 async def analyze(project_id: str, payload: schemas.CoverageAnalyzeRequest, db: Session = Depends(get_db)):
+    if not config.settings.coverage_enabled:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Code-coverage analysis is disabled in this deployment "
+                "(the coverage runner toolchains are not installed here)."
+            ),
+        )
     state.reset_logs(db, project_id)
     state.append_log(db, project_id, "info", "Initiating GitHub Coverage Analysis Agent...")
 
