@@ -1,13 +1,15 @@
 name: deploy
 # Auto-deploy to the NextGenQA EC2 box on push to the deploy branch.
-# Runs on the self-hosted runner installed ON the box, so no inbound SSH is
-# needed. Rebuilds ONLY this service; the other containers keep running.
+# Runs on the self-hosted runner ON the box (no inbound SSH). The code is
+# fetched via actions/checkout using the ephemeral GITHUB_TOKEN — so NO
+# personal access token needs to live on the box, and revoking any PAT can't
+# break this. rsync copies the checked-out code into the deployed folder
+# (preserving the gitignored .env files), then only this service is rebuilt.
 on:
   push:
     branches: [feature/aws-deploy]
-  workflow_dispatch:            # also allow a manual "Run workflow" click
+  workflow_dispatch:
 
-# One deploy of this repo at a time (the single runner serializes across repos).
 concurrency:
   group: deploy-rtm
   cancel-in-progress: false
@@ -16,13 +18,15 @@ jobs:
   deploy:
     runs-on: [self-hosted, nextgenqa]
     steps:
-      - name: Update the deployed clone
+      - name: Check out the pushed code
+        uses: actions/checkout@v4
+        with:
+          ref: feature/aws-deploy
+
+      - name: Sync code into the deploy folder
         run: |
           set -euo pipefail
-          cd ~/RTM-and-Quality-Prediction-backend
-          git fetch --prune origin
-          git checkout feature/aws-deploy
-          git reset --hard origin/feature/aws-deploy
+          rsync -a --exclude='.git/' --exclude='.env' --exclude='backend/.env' --exclude='repair-agent/.env' ./ ~/RTM-and-Quality-Prediction-backend/
 
       - name: Rebuild & restart the service
         run: |
