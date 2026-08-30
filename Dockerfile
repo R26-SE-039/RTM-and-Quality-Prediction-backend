@@ -1,13 +1,33 @@
 # syntax=docker/dockerfile:1
 
-# API-only RTM image: the code-coverage runners (Java/Maven+JaCoCo, JS, Python)
-# are intentionally NOT installed here — coverage is disabled in this deployment
-# via COVERAGE_ENABLED=false, so the image stays small. All Python deps are
-# manylinux wheels (psycopg2-binary bundles libpq), so no build toolchain is
-# needed.
+# RTM image WITH the code-coverage runner toolchains, so COVERAGE_ENABLED=true
+# works in deployment:
+#   - git: shallow-clones the analyzed repo
+#   - default-jdk-headless + maven: Java coverage (JaCoCo via Maven/Gradle;
+#     Gradle repos are expected to ship their own gradlew wrapper)
+#   - nodejs + npm: JavaScript/TypeScript coverage (Jest / Mocha+nyc)
+#   - chromium + chromium-driver: lets Selenium-based Java suites actually
+#     launch a browser inside the container (tests must run headless)
+# Python coverage needs nothing extra — the runner builds a venv from this
+# image's own python3 and pip-installs pytest/pytest-cov per run.
 FROM python:3.12-slim
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        git \
+        default-jdk-headless \
+        maven \
+        nodejs \
+        npm \
+        chromium \
+        chromium-driver \
+    && rm -rf /var/lib/apt/lists/*
+
+# Debian puts the JDK under an arch-suffixed dir (java-17-openjdk-arm64/-amd64)
+# that java_runner's candidate list doesn't include — point the runner at the
+# arch-agnostic default-java symlink instead.
+ENV JAVA_HOME_FOR_COVERAGE=/usr/lib/jvm/default-java
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
