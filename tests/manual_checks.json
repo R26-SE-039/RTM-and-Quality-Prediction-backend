@@ -1,0 +1,58 @@
+[
+  {
+    "id": "MAN-01",
+    "module": "RTM Generation",
+    "title": "RTM Matrix page shows live requirements and coverage",
+    "objective": "Confirm the RTM Matrix page lists every requirement / user story of the open iteration with coverage pills matching the API.",
+    "steps": "Open RTM > RTM Matrix for the demo project. Compare the number of rows and the Fully/Partial/Not covered counts with LIVE-05 evidence.",
+    "expected": "Row count and coverage statuses equal the live API summary; each requirement shows its linked Gherkin tests."
+  },
+  {
+    "id": "MAN-02",
+    "module": "RTM Generation",
+    "title": "RTM export to PDF",
+    "objective": "Confirm the Export PDF button produces a readable traceability document.",
+    "steps": "On the RTM Matrix page click Export PDF and open the downloaded file.",
+    "expected": "PDF contains one line per requirement with story, ACs, tests, status and coverage."
+  },
+  {
+    "id": "MAN-03",
+    "module": "Quality Prediction",
+    "title": "Quality Prediction page shows score, label and probabilities",
+    "objective": "Confirm a selected test case shows its extracted features, formula score, model label and class probabilities.",
+    "steps": "Open RTM > Quality Prediction, select a test case from the dropdown.",
+    "expected": "Features, 0-100 score, High/Medium/Low label and probabilities are displayed and match API-08 / LIVE-07."
+  },
+  {
+    "id": "MAN-04",
+    "module": "Intelligent Test Improvement",
+    "title": "Improve action shows gaps and before/after scores",
+    "objective": "Confirm the Improve button lists the detected gaps, the rewritten Gherkin and the re-calculated score.",
+    "steps": "On Quality Prediction select a Low/Medium test case and click Improve.",
+    "expected": "Gap list with recommendations, improved Given/When/Then text, before and after score and label."
+  },
+  {
+    "id": "MAN-05",
+    "module": "Coverage Gap Detection",
+    "title": "Coverage Gaps page ranks gaps and generates a test",
+    "objective": "Confirm gaps are sorted by risk with factor breakdown, and a generated test can be added to the RTM.",
+    "steps": "Open RTM > Coverage Gaps, expand the top gap, Generate Test Case for a missing AC, then Add to RTM; reopen RTM Matrix.",
+    "expected": "Highest risk first; generated Gherkin uses the AC wording; the test appears in the matrix with source 'generated'."
+  },
+  {
+    "id": "MAN-06",
+    "module": "API & Integration",
+    "title": "Clear error when Component 1 is stopped",
+    "objective": "Confirm the UI shows a readable error banner rather than crashing when Component 1 is unavailable.",
+    "steps": "Stop Component 1 (port 8001), refresh the RTM Matrix page, then restart Component 1.",
+    "expected": "Error banner mentioning Component 1; page recovers after restart and refresh."
+  },
+  {
+    "id": "MAN-07",
+    "module": "RTM Generation",
+    "title": "Dashboard and Portfolio agree with the matrix",
+    "objective": "Confirm the Dashboard totals and the Portfolio lists are consistent with the RTM Matrix.",
+    "steps": "Open RTM > Dashboard and RTM > Portfolio for the same project.",
+    "expected": "Dashboard test totals equal the matrix; portfolio items reference tests that exist in the matrix."
+  }
+]

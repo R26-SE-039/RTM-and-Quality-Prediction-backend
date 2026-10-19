@@ -21,3 +21,6 @@ env/
 # IDE
 .vscode/
 .idea/
+
+# Test run history (latest.json / latest.md are kept as evidence)
+tests/reports/history/
