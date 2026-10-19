@@ -1,0 +1,1205 @@
+{
+  "generated_at": "2026-10-10T04:58:35.813827+00:00",
+  "duration_s": 133.88,
+  "suite": "full (offline + live integration)",
+  "command": "pytest -q -rs",
+  "environment": {
+    "python": "3.11.15",
+    "platform": "macOS-26.3-arm64-arm-64bit",
+    "pytest": "8.3.3",
+    "model": "RandomForestClassifier (scikit-learn) {'max_depth': 10, 'min_samples_leaf': 2, 'n_estimators': 150} (trained 2026-08-20)",
+    "model_holdout_accuracy": 0.98
+  },
+  "summary": {
+    "total": 73,
+    "Passed": 71,
+    "Failed": 2,
+    "Blocked": 0,
+    "Not executed": 0
+  },
+  "modules": [
+    {
+      "module": "API & Integration",
+      "total": 14,
+      "Passed": 14,
+      "Failed": 0,
+      "Blocked": 0,
+      "Not executed": 0
+    },
+    {
+      "module": "Coverage Gap Detection",
+      "total": 14,
+      "Passed": 14,
+      "Failed": 0,
+      "Blocked": 0,
+      "Not executed": 0
+    },
+    {
+      "module": "Intelligent Test Improvement",
+      "total": 9,
+      "Passed": 7,
+      "Failed": 2,
+      "Blocked": 0,
+      "Not executed": 0
+    },
+    {
+      "module": "Live Integration",
+      "total": 9,
+      "Passed": 9,
+      "Failed": 0,
+      "Blocked": 0,
+      "Not executed": 0
+    },
+    {
+      "module": "Quality Prediction",
+      "total": 15,
+      "Passed": 15,
+      "Failed": 0,
+      "Blocked": 0,
+      "Not executed": 0
+    },
+    {
+      "module": "RTM Generation",
+      "total": 12,
+      "Passed": 12,
+      "Failed": 0,
+      "Blocked": 0,
+      "Not executed": 0
+    }
+  ],
+  "cases": [
+    {
+      "id": "API-01",
+      "module": "API & Integration",
+      "title": "Health / readiness probe",
+      "objective": "Verify /api/health reports ok only when the database is reachable.",
+      "expected": "HTTP 200 {status: ok, database: up} (test SQLite database).",
+      "level": "api",
+      "nodeid": "tests/test_api_integration.py::test_health",
+      "status": "Passed",
+      "duration_ms": 443.75,
+      "failure": null,
+      "actual": "HTTP 200 {'status': 'ok', 'database': 'up'}",
+      "evidence": []
+    },
+    {
+      "id": "API-02",
+      "module": "API & Integration",
+      "title": "Frontend-to-backend endpoint contract",
+      "objective": "Parse every request in frontend/src/api/rtmApi.ts and verify a backend route exists with the same path and HTTP method.",
+      "expected": "All frontend RTM calls resolve to an existing FastAPI route (0 unmatched).",
+      "level": "api",
+      "nodeid": "tests/test_api_integration.py::test_frontend_contract",
+      "status": "Passed",
+      "duration_ms": 4.9799999999999995,
+      "failure": null,
+      "actual": "20 frontend calls checked; unmatched: none",
+      "evidence": [
+        {
+          "label": "Frontend calls",
+          "value": "[\n  \"GET /api/rtm/matrix\",\n  \"GET /api/rtm/matrix/requirements/{x}\",\n  \"GET /api/dashboard/summary\",\n  \"GET /api/inventory\",\n  \"GET /api/portfolio/analysis\",\n  \"GET /api/rtm/c2-gaps\",\n  \"POST /api/rtm/c2-gaps/generate-test-case\",\n  \"POST /api/rtm/c2-gaps/generate-all\",\n  \"POST /api/rtm/c2-gaps/{x}/add\",\n  \"GET /api/rtm/c2-gaps/generated\",\n  \"GET /api/ml/c2-quality/predictions/{x}\",\n  \"POST /api/ml/c2-quality/improve\",\n  \"POST /api/coverage/analyze\",\n  \"GET /api/coverage/status\",\n  \"GET /api/coverage/report\",\n  \"GET /api/github/status\",\n  \"GET /api/testing/report\",\n  \"POST /api/testing/run\",\n  \"GET /api/testing/run\",\n  \"PUT /api/testing/manual/{x}\"\n]"
+        }
+      ]
+    },
+    {
+      "id": "API-03",
+      "module": "API & Integration",
+      "title": "Response shape matches the frontend Matrix type",
+      "objective": "Verify the matrix response contains every field the RTM Matrix page reads (types/rtm.ts Matrix / MatrixRow).",
+      "expected": "Top-level keys project_id, iteration_id, summary, rows; each row has requirement, story, AC, coverage and test fields.",
+      "level": "api",
+      "nodeid": "tests/test_api_integration.py::test_matrix_shape",
+      "status": "Passed",
+      "duration_ms": 7.1499999999999995,
+      "failure": null,
+      "actual": "Top-level keys: ['iteration_id', 'project_id', 'rows', 'summary']; missing row keys: none; test keys: ['description', 'id', 'source', 'status', 'title']",
+      "evidence": []
+    },
+    {
+      "id": "API-04",
+      "module": "API & Integration",
+      "title": "Component 1 unavailable -> clear 503 error",
+      "objective": "Verify the RTM endpoints return HTTP 503 with an explanatory message (shown in the UI banner) when Component 1 is down.",
+      "expected": "Matrix, gaps, dashboard, inventory and portfolio -> 503 with 'Component 1' in detail.",
+      "level": "api",
+      "nodeid": "tests/test_api_integration.py::test_c1_down",
+      "status": "Passed",
+      "duration_ms": 8.02,
+      "failure": null,
+      "actual": "/api/rtm/matrix -> 503; /api/rtm/c2-gaps -> 503; /api/dashboard/summary -> 503; /api/inventory -> 503; /api/portfolio/analysis -> 503; detail: Component 1 request failed (simulated outage)",
+      "evidence": []
+    },
+    {
+      "id": "API-05",
+      "module": "API & Integration",
+      "title": "Component 2 unavailable -> graceful degradation",
+      "objective": "Verify the RTM still renders requirements (with no tests) when Component 2 is down, instead of failing the page.",
+      "expected": "Matrix HTTP 200; requirement rows present; total_tests 0; rows NOT COVERED.",
+      "level": "api",
+      "nodeid": "tests/test_api_integration.py::test_c2_down",
+      "status": "Passed",
+      "duration_ms": 4.5200000000000005,
+      "failure": null,
+      "actual": "HTTP 200; rows 1; total_tests 0; status NOT COVERED",
+      "evidence": []
+    },
+    {
+      "id": "API-06",
+      "module": "API & Integration",
+      "title": "Missing required query parameters rejected",
+      "objective": "Verify project-scoped endpoints reject requests without project_id / iteration_id.",
+      "expected": "HTTP 422 for matrix, gaps, dashboard, inventory, portfolio when iteration_id is omitted.",
+      "level": "api",
+      "nodeid": "tests/test_api_integration.py::test_missing_params",
+      "status": "Passed",
+      "duration_ms": 8.02,
+      "failure": null,
+      "actual": "{'/api/rtm/matrix': 422, '/api/rtm/c2-gaps': 422, '/api/dashboard/summary': 422, '/api/inventory': 422, '/api/portfolio/analysis': 422}",
+      "evidence": []
+    },
+    {
+      "id": "API-07",
+      "module": "API & Integration",
+      "title": "Model and dataset transparency endpoints",
+      "objective": "Verify model-info and dataset-info return the real trained-model report and dataset statistics used on the Quality Prediction page.",
+      "expected": "model-info: trained true, RandomForest, matches c2_quality_model_metadata.json; dataset-info: 1,000 rows, labels Low/Medium/High.",
+      "level": "api",
+      "nodeid": "tests/test_api_integration.py::test_model_dataset_info",
+      "status": "Passed",
+      "duration_ms": 1639.01,
+      "failure": null,
+      "actual": "trained=True; algorithm=RandomForestClassifier (scikit-learn); accuracy=0.98; dataset rows=1000; labels=[{'label': 'Low', 'count': 467}, {'label': 'Medium', 'count': 202}, {'label': 'High', 'count': 331}]",
+      "evidence": []
+    },
+    {
+      "id": "API-08",
+      "module": "API & Integration",
+      "title": "Quality predictions endpoint for a project",
+      "objective": "Verify every Component 2 test case of a project gets features, score, formula label and model label, using the linked ACs from Component 1.",
+      "expected": "One prediction per test case; requirement_linked = 1 when its story has ACs; labels within {High, Medium, Low}.",
+      "level": "api",
+      "nodeid": "tests/test_api_integration.py::test_predictions_endpoint",
+      "status": "Passed",
+      "duration_ms": 39.38000000000001,
+      "failure": null,
+      "actual": "(linked, score, label): {'T1': (1, 94.12, 'High'), 'T2': (0, 16.66, 'Low')}",
+      "evidence": []
+    },
+    {
+      "id": "API-09",
+      "module": "API & Integration",
+      "title": "Dashboard, inventory and portfolio consistency",
+      "objective": "Verify the dashboard, inventory and portfolio endpoints are built from the same matrix and agree with each other.",
+      "expected": "Dashboard quality buckets sum to matrix total_tests; inventory lists each test once with a quality score; portfolio flags the duplicate, the failing Must test and the vague test.",
+      "level": "api",
+      "nodeid": "tests/test_api_integration.py::test_dashboard_inventory_portfolio",
+      "status": "Passed",
+      "duration_ms": 51.94,
+      "failure": null,
+      "actual": "dashboard buckets=4, matrix tests=4; inventory=[('A', 'High'), ('B', 'High'), ('C', 'Medium'), ('D', 'Low')]; portfolio={'redundant': ['B'], 'critical': ['C'], 'weak': ['D']}",
+      "evidence": []
+    },
+    {
+      "id": "API-10",
+      "module": "API & Integration",
+      "title": "Component 2 client: unreachable service raises a typed error",
+      "objective": "Verify the real Component 2 HTTP client converts connection failures into Component2Unavailable (pointed at a closed local port; Component 2 itself is not modified).",
+      "expected": "get_traceability_test_cases raises Component2Unavailable; is_reachable() returns False.",
+      "level": "unit",
+      "nodeid": "tests/test_api_integration.py::test_c2_client_unreachable",
+      "status": "Passed",
+      "duration_ms": 31.33,
+      "failure": null,
+      "actual": "Raised: Component2Unavailable: Component 2 request failed (http://127.0.0.1:9/projects/P1/traceability): All connection attempts failed; is_reachable=False",
+      "evidence": []
+    },
+    {
+      "id": "API-11",
+      "module": "API & Integration",
+      "title": "Component 1 client: unreachable service raises a typed error",
+      "objective": "Verify the real Component 1 HTTP client converts connection failures into Component1Unavailable.",
+      "expected": "get_requirements_with_stories raises Component1Unavailable; the external proxy endpoint returns 503.",
+      "level": "api",
+      "nodeid": "tests/test_api_integration.py::test_c1_client_unreachable",
+      "status": "Passed",
+      "duration_ms": 18.68,
+      "failure": null,
+      "actual": "Client raised Component1Unavailable; proxy endpoint -> HTTP 503",
+      "evidence": []
+    },
+    {
+      "id": "API-12",
+      "module": "API & Integration",
+      "title": "Code-coverage analysis disabled safely",
+      "objective": "Verify POST /api/coverage/analyze returns 503 (no clone, no build) when COVERAGE_ENABLED=false, as in the test and Docker deployments.",
+      "expected": "HTTP 503 with 'disabled' in the detail; report endpoint still answers.",
+      "level": "api",
+      "nodeid": "tests/test_api_integration.py::test_coverage_disabled",
+      "status": "Passed",
+      "duration_ms": 9.23,
+      "failure": null,
+      "actual": "analyze -> HTTP 503: Code-coverage analysis is disabled in this deployment (the coverage runner toolc; report -> HTTP 200 status=IDLE",
+      "evidence": []
+    },
+    {
+      "id": "API-13",
+      "module": "API & Integration",
+      "title": "Existing functionality unaffected by the testing component",
+      "objective": "Verify all pre-existing RTM routes are still registered after adding the testing endpoints.",
+      "expected": "All 17 pre-existing RTM route paths present in the application.",
+      "level": "unit",
+      "nodeid": "tests/test_api_integration.py::test_existing_routes_intact",
+      "status": "Passed",
+      "duration_ms": 0.26,
+      "failure": null,
+      "actual": "17/17 pre-existing routes present; missing: none",
+      "evidence": []
+    },
+    {
+      "id": "API-14",
+      "module": "API & Integration",
+      "title": "Testing-dashboard endpoints",
+      "objective": "Verify the dashboard can read the evidence report and manual checks, and that unknown manual checks are rejected.",
+      "expected": "GET /api/testing/report -> 200 with suite_available true and 7 manual checks; PUT to an unknown check -> 404.",
+      "level": "api",
+      "nodeid": "tests/test_api_integration.py::test_testing_endpoints",
+      "status": "Passed",
+      "duration_ms": 9.690000000000001,
+      "failure": null,
+      "actual": "suite_available=True; manual checks=7; run status=idle; unknown check -> HTTP 404",
+      "evidence": []
+    },
+    {
+      "id": "GAP-01",
+      "module": "Coverage Gap Detection",
+      "title": "Acceptance-criterion coverage threshold (40% word overlap)",
+      "objective": "Verify an AC counts as covered only when >= 40% of its words (3+ letters) appear in at least one linked test.",
+      "expected": "AC with 2 of 5 words present (40%) -> covered; AC with 1 of 5 words (20%) -> missing.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_ac_threshold",
+      "status": "Passed",
+      "duration_ms": 0.27,
+      "failure": null,
+      "actual": "2/5 words -> covered=True; 1/5 words -> covered=False",
+      "evidence": []
+    },
+    {
+      "id": "GAP-02",
+      "module": "Coverage Gap Detection",
+      "title": "Uncovered acceptance criterion identified",
+      "objective": "Verify the Coverage Gaps API lists a requirement whose tests miss one acceptance criterion and names that criterion.",
+      "expected": "Gap listed; missing_acceptance_criteria = [lockout AC]; covered 2/3; current_coverage_pct 66.7; action 'Generate 1 additional test case'.",
+      "level": "api",
+      "nodeid": "tests/test_coverage_gaps.py::test_uncovered_ac",
+      "status": "Passed",
+      "duration_ms": 7.88,
+      "failure": null,
+      "actual": "missing=['The account is locked after five failed login attempts']; covered 2/3; coverage 66.7%; risk 36.0 (Low); action: Generate 1 additional test case for this requirement.",
+      "evidence": [
+        {
+          "label": "Risk factors",
+          "value": "{\n  \"business_priority\": 70.0,\n  \"coverage_gap\": 26.7,\n  \"acceptance_criteria_gap\": 33.3,\n  \"test_failure_rate\": 0.0,\n  \"code_coverage_gap\": 50.0\n}"
+        }
+      ]
+    },
+    {
+      "id": "GAP-03",
+      "module": "Coverage Gap Detection",
+      "title": "Requirement with no linked test cases",
+      "objective": "Verify an untested Must requirement is reported as a Critical gap with the maximum coverage-gap factor.",
+      "expected": "business_priority 100, coverage_gap 100, AC gap 100; risk >= 70 -> Critical; action 'Generate 2 additional test cases'.",
+      "level": "api",
+      "nodeid": "tests/test_coverage_gaps.py::test_no_tests_gap",
+      "status": "Passed",
+      "duration_ms": 4.0600000000000005,
+      "failure": null,
+      "actual": "factors={'business_priority': 100.0, 'coverage_gap': 100.0, 'acceptance_criteria_gap': 100.0, 'test_failure_rate': 50.0, 'code_coverage_gap': 50.0}; risk 80.0 (Critical); action: Generate 2 additional test cases for this requirement.",
+      "evidence": []
+    },
+    {
+      "id": "GAP-04",
+      "module": "Coverage Gap Detection",
+      "title": "Healthy requirement is not reported as a gap",
+      "objective": "Verify a requirement that is fully covered, passing, and covered by a high-quality test does not appear in the gap list.",
+      "expected": "R1 absent from the Coverage Gaps response.",
+      "level": "api",
+      "nodeid": "tests/test_coverage_gaps.py::test_healthy_not_gap",
+      "status": "Passed",
+      "duration_ms": 7.459999999999999,
+      "failure": null,
+      "actual": "Gap list requirement ids: none",
+      "evidence": []
+    },
+    {
+      "id": "GAP-05",
+      "module": "Coverage Gap Detection",
+      "title": "AC coverage is independent of test execution results",
+      "objective": "Verify a failing test still counts as textually covering its ACs in the RTM, while the gap analysis separately flags it through the test-failure factor.",
+      "expected": "RTM row: FULLY COVERED, failed_tests 1. Gap: listed, test_failure_rate 100, AC gap 0, action 'Review and fix the failing linked test case(s)'.",
+      "level": "api",
+      "nodeid": "tests/test_coverage_gaps.py::test_ac_coverage_vs_execution",
+      "status": "Passed",
+      "duration_ms": 8.85,
+      "failure": null,
+      "actual": "RTM: FULLY COVERED, coverage 100.0%, failed 1. Gap factors: AC gap 0.0, failure rate 100.0; action: Review and fix the failing linked test case(s) \u2014 acceptance criteria are textually covered but not passing.",
+      "evidence": []
+    },
+    {
+      "id": "GAP-06",
+      "module": "Coverage Gap Detection",
+      "title": "Code coverage is a separate, project-level risk factor",
+      "objective": "Verify GitHub code coverage only feeds the code_coverage_gap factor (100 - overall%) and never changes requirement AC coverage.",
+      "expected": "No coverage report -> factor 50 (neutral); DONE report with overall 80% -> factor 20; RTM coverage_pct unchanged (66.7) in both cases.",
+      "level": "api",
+      "nodeid": "tests/test_coverage_gaps.py::test_code_coverage_separate",
+      "status": "Passed",
+      "duration_ms": 15.91,
+      "failure": null,
+      "actual": "code_coverage_gap: 50.0 -> 20.0; RTM coverage_pct: 66.7 -> 66.7",
+      "evidence": []
+    },
+    {
+      "id": "GAP-07",
+      "module": "Coverage Gap Detection",
+      "title": "Risk score and risk-level boundaries",
+      "objective": "Verify risk = mean of the five factors, with Critical >= 70, Medium 40-69.9, Low < 40.",
+      "expected": "Each scenario's risk_score equals the factor mean; levels follow the 70 / 40 boundaries.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_risk_formula_and_levels",
+      "status": "Passed",
+      "duration_ms": 0.27,
+      "failure": null,
+      "actual": "(risk, factor mean, level): {'untested Must': (77.5, 77.5, 'Critical'), 'partial Should': (33.5, 33.5, 'Low'), 'covered Could': (15.0, 15.0, 'Low')}",
+      "evidence": []
+    },
+    {
+      "id": "GAP-08",
+      "module": "Coverage Gap Detection",
+      "title": "Failure-rate fallback when nothing has been executed",
+      "objective": "Verify the test-failure factor uses 100 - average predicted quality when no linked test has run, and 50 when no prediction is available.",
+      "expected": "Unexecuted tests with avg quality 30 -> factor 70; no tests and no quality -> factor 50.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_failure_rate_fallback",
+      "status": "Passed",
+      "duration_ms": 0.22999999999999998,
+      "failure": null,
+      "actual": "pending + quality 30 -> 70.0; no data -> 50.0",
+      "evidence": []
+    },
+    {
+      "id": "GAP-09",
+      "module": "Coverage Gap Detection",
+      "title": "Covered but never executed",
+      "objective": "Verify a requirement whose ACs are covered by a high-quality but unexecuted test is still flagged, with an 'execute' recommendation.",
+      "expected": "Gap listed with action 'Execute the linked test case(s) ...'.",
+      "level": "api",
+      "nodeid": "tests/test_coverage_gaps.py::test_unverified_tests",
+      "status": "Passed",
+      "duration_ms": 7.23,
+      "failure": null,
+      "actual": "Listed: True; action: Execute the linked test case(s) \u2014 acceptance criteria are covered on paper but not yet verified.",
+      "evidence": []
+    },
+    {
+      "id": "GAP-10",
+      "module": "Coverage Gap Detection",
+      "title": "Low-quality covering test flagged as a gap",
+      "objective": "Verify textual AC coverage is not enough when the covering test's predicted quality is below 70.",
+      "expected": "Requirement with only a vague test listed; recommendation refers to improving low-quality tests or generating tests.",
+      "level": "api",
+      "nodeid": "tests/test_coverage_gaps.py::test_low_quality_gap",
+      "status": "Passed",
+      "duration_ms": 6.89,
+      "failure": null,
+      "actual": "Listed: True; coverage 100.0%; action: Acceptance criteria are covered, but linked test cases score low on predicted quality \u2014 review and improve them (see the Quality Prediction / Test Improvement pages).",
+      "evidence": []
+    },
+    {
+      "id": "GAP-11",
+      "module": "Coverage Gap Detection",
+      "title": "Gaps sorted by risk (highest first)",
+      "objective": "Verify the Coverage Gaps API returns gaps in descending order of risk score.",
+      "expected": "risk_score sequence is non-increasing; untested Must requirement first.",
+      "level": "api",
+      "nodeid": "tests/test_coverage_gaps.py::test_sorted_by_risk",
+      "status": "Passed",
+      "duration_ms": 10.63,
+      "failure": null,
+      "actual": "Order: [('R2', 80.0), ('R3', 48.0), ('R1', 30.0)]",
+      "evidence": []
+    },
+    {
+      "id": "GAP-12",
+      "module": "Coverage Gap Detection",
+      "title": "Test generation for an uncovered AC is grounded and idempotent",
+      "objective": "Verify the generated Gherkin uses the criterion's own wording and the story persona, is scored by the model, and repeated requests reuse the same row.",
+      "expected": "Text contains Given/When/Then, the AC wording and persona 'registered user'; requirement_coverage 100; same id on second call.",
+      "level": "api",
+      "nodeid": "tests/test_coverage_gaps.py::test_generate_gap_test",
+      "status": "Passed",
+      "duration_ms": 16.900000000000002,
+      "failure": null,
+      "actual": "ids 1 / 1; coverage 100.0; score 84.66 (High), RF Medium",
+      "evidence": [
+        {
+          "label": "Generated Gherkin",
+          "value": "Feature: User Login\n\n  Scenario: The account is locked after five failed login attempts\n    Given a registered user is on the \"User Login\" page\n    And the system meets the requirement: The system shall lock accounts after repeated failures\n    When the account is locked after five failed login attempts\n    Then the account is locked after five failed login attempts\n    And no unrelated errors should occur\n"
+        }
+      ]
+    },
+    {
+      "id": "GAP-13",
+      "module": "Coverage Gap Detection",
+      "title": "Add generated test: validation of target and id",
+      "objective": "Verify adding a generated test accepts only 'inventory' or 'rtm' and rejects unknown ids.",
+      "expected": "target=rtm -> 200 with added_to_rtm true; target=bogus -> 400; unknown id -> 404.",
+      "level": "api",
+      "nodeid": "tests/test_coverage_gaps.py::test_add_generated_validation",
+      "status": "Passed",
+      "duration_ms": 19.04,
+      "failure": null,
+      "actual": "rtm -> 200 added_to_rtm=True; bogus -> 400; unknown -> 404",
+      "evidence": []
+    },
+    {
+      "id": "GAP-14",
+      "module": "Coverage Gap Detection",
+      "title": "Bulk generation for critical gaps",
+      "objective": "Verify generate-all creates one test per (requirement, missing AC) pair in a single request.",
+      "expected": "2 items -> 2 generated tests with distinct ids, each scored.",
+      "level": "api",
+      "nodeid": "tests/test_coverage_gaps.py::test_generate_all",
+      "status": "Passed",
+      "duration_ms": 14.72,
+      "failure": null,
+      "actual": "HTTP 200; generated 2; ids [1, 2]; labels ['Medium', 'Medium']",
+      "evidence": []
+    },
+    {
+      "id": "IMP-01",
+      "module": "Intelligent Test Improvement",
+      "title": "Quality gaps identified in a deficient test case",
+      "objective": "Verify analyze_gaps reports each weak model feature with a status and a concrete recommendation.",
+      "expected": "Vague When-only test with no linked requirement -> 7 gaps: Preconditions, Expected Result, Specificity, Clarity, Requirement Coverage, Completeness, Requirement Link (Test Steps present, so not flagged).",
+      "level": "unit",
+      "nodeid": "tests/test_test_improvement.py::test_gaps_identified",
+      "status": "Passed",
+      "duration_ms": 0.34,
+      "failure": null,
+      "actual": "7 gaps: ['Preconditions', 'Expected Result', 'Specificity', 'Clarity', 'Requirement Coverage', 'Completeness', 'Requirement Link']",
+      "evidence": [
+        {
+          "label": "Gap details",
+          "value": "[\n  {\n    \"area\": \"has_preconditions\",\n    \"label\": \"Preconditions\",\n    \"status\": \"Missing\",\n    \"severity\": \"warning\",\n    \"recommendation\": \"Add the required initial system/user conditions (a Given step).\"\n  },\n  {\n    \"area\": \"has_expected_result\",\n    \"label\": \"Expected Result\",\n    \"status\": \"Missing\",\n    \"severity\": \"warning\",\n    \"recommendation\": \"Define the exact expected system response (a Then step).\"\n  },\n  {\n    \"area\": \"specificity_score\",\n    \"label\": \"Specificity\",\n    \"status\": \"Generic\",\n    \"severity\": \"warning\",\n    \"recommendation\": \"Use concrete values, field names, and button labels instead of vague wording.\"\n  },\n  {\n    \"area\": \"ambiguity_score\",\n    \"label\": \"Clarity\",\n    \"status\": \"100/100 ambiguous\",\n    \"severity\": \"warning\",\n    \"recommendation\": \"Replace vague words (e.g. \\\"some\\\", \\\"properly\\\", \\\"appropriate\\\") with precise, testable statements.\"\n  },\n  {\n    \"area\": \"requirement_coverage\",\n    \"label\": \"Requirement Coverage\",\n    \"status\": \"0%\",\n    \"severity\": \"warning\",\n    \"recommendation\": \"Add scenario steps that explicitly cover the linked requirement's acceptance criteria.\"\n  },\n  {\n    \"area\": \"completeness_score\",\n    \"label\": \"Completeness\",\n    \"status\": \"33/100\",\n    \"severity\": \"warning\",\n    \"recommendation\": \"Ensure the scenario has a clear Given/When/Then structure with enough scenario coverage.\"\n  },\n  {\n    \"area\": \"requirement_linked\",\n    \"label\": \"Requirement Link\",\n    \"status\": \"Not Linked\",\n    \"severity\": \"warning\",\n    \"recommendation\": \"Link this test case to its source requirement/user story for traceability.\"\n  }\n]"
+        }
+      ]
+    },
+    {
+      "id": "IMP-02",
+      "module": "Intelligent Test Improvement",
+      "title": "Improved Given/When/Then scenarios generated",
+      "objective": "Verify the improved test is valid Gherkin with a happy-path and an invalid-input scenario, each with Given/When/Then, and folds in the linked ACs.",
+      "expected": "2 scenarios; each has Given, When, Then; an 'And the result satisfies the linked acceptance criteria' step containing the AC text.",
+      "level": "api",
+      "nodeid": "tests/test_test_improvement.py::test_improved_gherkin_structure",
+      "status": "Passed",
+      "duration_ms": 17.15,
+      "failure": null,
+      "actual": "HTTP 200; scenarios=2; each has G/W/T: [True, True]; AC folded in: True",
+      "evidence": [
+        {
+          "label": "Improved Gherkin",
+          "value": "Feature: Login\n\n  Scenario: Improved \u2014 User Login succeeds\n    Given a registered user is authenticated and on the \"User Login\" page\n    When the user performs the required action for \"User Login\" with valid input values\n    Then the system completes \"User Login\" successfully and returns a confirmation\n    And the result satisfies the linked acceptance criteria: The user can login with a valid email and password If the password is wrong, the system displays an invalid email or password error\n\n  Scenario: Improved \u2014 User Login handles invalid input\n    Given a registered user is authenticated and on the \"User Login\" page\n    When the user performs the required action for \"User Login\" with invalid or missing input values\n    Then the system rejects the action and displays a specific validation error message\n"
+        }
+      ]
+    },
+    {
+      "id": "IMP-03",
+      "module": "Intelligent Test Improvement",
+      "title": "Quality score recalculated through the same pipeline",
+      "objective": "Verify the 'after' score is measured by re-running feature extraction and the model on the rewritten text, not asserted.",
+      "expected": "improved_quality_score == compute_quality_score(improved_features); improved_features == extract_features(improved_description); score rises from Low to High.",
+      "level": "api",
+      "nodeid": "tests/test_test_improvement.py::test_score_recalculated",
+      "status": "Passed",
+      "duration_ms": 9.89,
+      "failure": null,
+      "actual": "Before 19.82 (Low) -> after 94.05 (High/High); features re-extracted identically: True",
+      "evidence": []
+    },
+    {
+      "id": "IMP-04",
+      "module": "Intelligent Test Improvement",
+      "title": "Improvement preserves the original test-case steps",
+      "objective": "Check whether the improvement keeps the original Given/When/Then steps and only adds what is missing (research requirement).",
+      "expected": "Every original step line of the test appears in the improved Gherkin.",
+      "level": "api",
+      "nodeid": "tests/test_test_improvement.py::test_preserves_original_steps",
+      "status": "Failed",
+      "duration_ms": 10.66,
+      "failure": "        original = _steps(LOGIN_HIGH)\n        kept = [s for s in original if s in out[\"improved_description\"]]\n        record.actual(f\"{len(kept)} of {len(original)} original steps preserved in the improved text\")\n        record.add(\"Original steps\", original)\n        record.add(\"Improved Gherkin\", out[\"improved_description\"])\n        record.add(\"Finding\", \"generate_improved_gherkin() rebuilds the scenario from a template using only the title, story title and \"\n                              \"acceptance criteria; it never reads the original description, so original steps and concrete values are replaced, not extended.\")\n>       assert kept == original, f\"only {len(kept)}/{len(original)} original steps preserved\"\nE       AssertionError: only 0/6 original steps preserved\nE       assert [] == ['Given a reg...or password\"']\nE         \nE         Right contains 6 more items, first extra item: 'Given a registered user \"alice@example.com\" exists with password \"Secret123\"'\nE         Use -v to get more diff\ntests/test_test_improvement.py:82: AssertionError",
+      "actual": "0 of 6 original steps preserved in the improved text",
+      "evidence": [
+        {
+          "label": "Original steps",
+          "value": "[\n  \"Given a registered user \\\"alice@example.com\\\" exists with password \\\"Secret123\\\"\",\n  \"When the user enters email \\\"alice@example.com\\\" and password \\\"Secret123\\\" and clicks \\\"Login\\\"\",\n  \"Then the system returns status code 200 and redirects to the \\\"Dashboard\\\" page\",\n  \"Given a registered user \\\"alice@example.com\\\" exists with password \\\"Secret123\\\"\",\n  \"When the user enters email \\\"alice@example.com\\\" and password \\\"Wrong999\\\" and clicks \\\"Login\\\"\",\n  \"Then the system displays the error \\\"Invalid email or password\\\"\"\n]"
+        },
+        {
+          "label": "Improved Gherkin",
+          "value": "Feature: User Login\n\n  Scenario: Improved \u2014 User Login succeeds\n    Given a registered user is authenticated and on the \"User Login\" page\n    When the user performs the required action for \"User Login\" with valid input values\n    Then the system completes \"User Login\" successfully and returns a confirmation\n    And the result satisfies the linked acceptance criteria: The user can login with a valid email and password If the password is wrong, the system displays an invalid email or password error\n\n  Scenario: Improved \u2014 User Login handles invalid input\n    Given a registered user is authenticated and on the \"User Login\" page\n    When the user performs the required action for \"User Login\" with invalid or missing input values\n    Then the system rejects the action and displays a specific validation error message\n"
+        },
+        {
+          "label": "Finding",
+          "value": "generate_improved_gherkin() rebuilds the scenario from a template using only the title, story title and acceptance criteria; it never reads the original description, so original steps and concrete values are replaced, not extended."
+        }
+      ]
+    },
+    {
+      "id": "IMP-05",
+      "module": "Intelligent Test Improvement",
+      "title": "Improvement preserves the feature title",
+      "objective": "Verify the improved Gherkin keeps the original test-case title as its Feature name.",
+      "expected": "Improved text starts with 'Feature: <original title>'.",
+      "level": "api",
+      "nodeid": "tests/test_test_improvement.py::test_preserves_title",
+      "status": "Passed",
+      "duration_ms": 9.979999999999999,
+      "failure": null,
+      "actual": "First line: 'Feature: Login with email'",
+      "evidence": []
+    },
+    {
+      "id": "IMP-06",
+      "module": "Intelligent Test Improvement",
+      "title": "Already-complete test case: no gaps reported",
+      "objective": "Verify a complete, specific, requirement-linked test produces no quality gaps.",
+      "expected": "analyze_gaps returns an empty list.",
+      "level": "unit",
+      "nodeid": "tests/test_test_improvement.py::test_complete_no_gaps",
+      "status": "Passed",
+      "duration_ms": 0.38,
+      "failure": null,
+      "actual": "Gaps: none; features: completeness 91.7, specificity 100.0, ambiguity 0.0, coverage 78.9",
+      "evidence": []
+    },
+    {
+      "id": "IMP-07",
+      "module": "Intelligent Test Improvement",
+      "title": "Already-complete test case: score not reduced by improvement",
+      "objective": "Check that running the improvement on an already high-quality test does not lower its measured quality.",
+      "expected": "improved_quality_score >= original quality_score.",
+      "level": "api",
+      "nodeid": "tests/test_test_improvement.py::test_complete_not_degraded",
+      "status": "Failed",
+      "duration_ms": 9.899999999999999,
+      "failure": "client = <starlette.testclient.TestClient object at 0x113722110>\nrecord = <tests.reporting.Record object at 0x113737c10>\n    @case(id=\"IMP-07\", module=M, title=\"Already-complete test case: score not reduced by improvement\",\n          objective=\"Check that running the improvement on an already high-quality test does not lower its measured quality.\",\n          expected=\"improved_quality_score >= original quality_score.\")\n    def test_complete_not_degraded(client, record):\n        p = _payload(LOGIN_HIGH, \"User Login\", LOGIN_AC)\n        out = client.post(\"/api/ml/c2-quality/improve\", json=p).json()\n        record.actual(f\"Original {p['quality_score']} ({p['predicted_label']}) -> improved {out['improved_quality_score']} ({out['improved_predicted_label']}); \"\n                      f\"specificity {p['features']['specificity_score']} -> {out['improved_features']['specificity_score']}\")\n>       assert out[\"improved_quality_score\"] >= p[\"quality_score\"]\nE       assert 94.05 >= 94.12\ntests/test_test_improvement.py:114: AssertionError",
+      "actual": "Original 94.12 (High) -> improved 94.05 (High); specificity 100.0 -> 71.4",
+      "evidence": []
+    },
+    {
+      "id": "IMP-08",
+      "module": "Intelligent Test Improvement",
+      "title": "No linked requirement information available",
+      "objective": "Verify that without acceptance criteria or requirement text the improvement does not invent requirement coverage and the requirement-link gap remains visible.",
+      "expected": "Improved features: requirement_linked 0 and requirement_coverage 0; gaps include 'Requirement Link'; no 'satisfies the' line in the text.",
+      "level": "api",
+      "nodeid": "tests/test_test_improvement.py::test_no_requirement_info",
+      "status": "Passed",
+      "duration_ms": 9.62,
+      "failure": null,
+      "actual": "requirement_linked=0, coverage=0.0; gaps=['Preconditions', 'Expected Result', 'Specificity', 'Clarity', 'Requirement Coverage', 'Completeness', 'Requirement Link']; score 75.84 (Medium)",
+      "evidence": [
+        {
+          "label": "Improved Gherkin",
+          "value": "Feature: Login\n\n  Scenario: Improved \u2014 Login succeeds\n    Given a registered user is authenticated and on the \"Login\" page\n    When the user performs the required action for \"Login\" with valid input values\n    Then the system completes \"Login\" successfully and returns a confirmation\n\n  Scenario: Improved \u2014 Login handles invalid input\n    Given a registered user is authenticated and on the \"Login\" page\n    When the user performs the required action for \"Login\" with invalid or missing input values\n    Then the system rejects the action and displays a specific validation error message\n"
+        }
+      ]
+    },
+    {
+      "id": "IMP-09",
+      "module": "Intelligent Test Improvement",
+      "title": "Invalid improvement request rejected",
+      "objective": "Verify the improve endpoint validates its payload.",
+      "expected": "Missing 'features' -> HTTP 422 with a validation error naming the field.",
+      "level": "api",
+      "nodeid": "tests/test_test_improvement.py::test_improve_validation",
+      "status": "Passed",
+      "duration_ms": 4.39,
+      "failure": null,
+      "actual": "HTTP 422; missing fields reported: ['features', 'quality_score', 'predicted_label']",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-01",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "RTM service running with its database",
+      "objective": "Verify the deployed RTM backend answers its readiness probe.",
+      "expected": "GET http://localhost:8003/api/health -> 200 {status: ok, database: up}.",
+      "nodeid": "tests/test_live_integration.py::test_live_rtm_health",
+      "status": "Passed",
+      "duration_ms": 108782.59999999999,
+      "failure": null,
+      "actual": "HTTP 200 {\"status\":\"ok\",\"database\":\"up\"}",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-02",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "API gateway routes RTM requests",
+      "objective": "Verify the path the browser uses (gateway /api/rtm prefix) reaches the RTM backend.",
+      "expected": "GET http://localhost:8081/api/rtm/api/health -> 200 with database up.",
+      "nodeid": "tests/test_live_integration.py::test_live_gateway",
+      "status": "Passed",
+      "duration_ms": 369.72999999999996,
+      "failure": null,
+      "actual": "HTTP 200 {\"status\":\"ok\",\"database\":\"up\"}",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-03",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Component 1 requirements-with-stories contract",
+      "objective": "Verify Component 1 serves the endpoint and fields the RTM depends on, for a real iteration.",
+      "expected": "HTTP 200 with items[]; every item has requirement_id, requirement_text, user_story_id, priority, acceptance_criteria.",
+      "nodeid": "tests/test_live_integration.py::test_live_c1_contract",
+      "status": "Passed",
+      "duration_ms": 10868.99,
+      "failure": null,
+      "actual": "HTTP 200; iteration adef3a45-6802-4a9d-8d0e-46375d7efbec; 8 items; items missing fields: none",
+      "evidence": [
+        {
+          "label": "Sample item",
+          "value": "{\n  \"requirement_id\": \"cc1dcc58-46e6-40c8-945e-69808eb16450\",\n  \"requirement_text\": \"The system must run on Windows Server.\",\n  \"requirement_type\": \"constraint\",\n  \"requirement_status\": \"active\",\n  \"requirement_created_at\": \"2026-08-16T01:48:22.198379\",\n  \"meeting_id\": \"d377bab6-bde5-4b2f-a6da-c76aabbe5654\",\n  \"meeting_title\": \"test meeting\",\n  \"user_story_id\": \"d9f45d97-da33-4dee-b0c3-cf2fa540e716\",\n  \"user_story_title\": \"Windows Server Environment Deployment\",\n  \"user_story_text\": \"As a System Administrator, I want the system to be compatible with Windows Server so that it can be deployed within our standard corporate infrastructure.\",\n  \"priority\": \"Must\",\n  \"user_story_status\": \"ready\",\n  \"acceptance_criteria\": [\n    \"Given a clean Windows Server instance When the application installer is executed Then the installation process completes successfully.\",\n    \"Given a Windows Server environment When the system is launched Then all core services start without compatibility errors.\",\n    \"Given a non-Windows environment When the installer is executed Then the system displays a clear error message stating OS incompatibility.\"\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "id": "LIVE-04",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Component 2 traceability contract",
+      "objective": "Verify Component 2's traceability payload has the stories / gherkin_scenarios / suites / executions structure the RTM parses.",
+      "expected": "Keys stories, suites, executions present; each Gherkin scenario has id and gherkin_text.",
+      "nodeid": "tests/test_live_integration.py::test_live_c2_contract",
+      "status": "Passed",
+      "duration_ms": 0.7999999999999999,
+      "failure": null,
+      "actual": "Project Infra Requirements (C1 Iteration): 4 stories, 4 Gherkin test cases, 0 suites, 0 executions; malformed: none",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-05",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Live RTM rows match Component 1 requirements",
+      "objective": "Verify the live RTM has exactly one row per Component 1 (requirement, user story) item with identical requirement / story fields.",
+      "expected": "One RTM row per Component 1 item, matched on (requirement_id, user_story_id); text, story title and priority identical.",
+      "nodeid": "tests/test_live_integration.py::test_live_rows_match_c1",
+      "status": "Passed",
+      "duration_ms": 2048.51,
+      "failure": null,
+      "actual": "Component 1 items: 8 (4 requirements); RTM rows: 8; mismatched: none",
+      "evidence": [
+        {
+          "label": "Live summary",
+          "value": "{\n  \"total_requirements\": 8,\n  \"fully_covered\": 8,\n  \"partially_covered\": 0,\n  \"not_covered\": 0,\n  \"total_tests\": 8,\n  \"passed_tests\": 0,\n  \"failed_tests\": 0,\n  \"pending_tests\": 8,\n  \"pass_rate\": 0.0,\n  \"defects\": 0,\n  \"avg_coverage_pct\": 100.0\n}"
+        }
+      ]
+    },
+    {
+      "id": "LIVE-06",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Live test-case linkage matches Component 2 stories",
+      "objective": "Verify every test in the live RTM belongs to the same user story in Component 2, and every Component 2 test case whose story is in the iteration appears in the RTM.",
+      "expected": "0 tests linked to the wrong story; 0 Component 2 test cases (for stories present in Component 1) missing from the RTM.",
+      "nodeid": "tests/test_live_integration.py::test_live_linkage",
+      "status": "Passed",
+      "duration_ms": 0.9800000000000001,
+      "failure": null,
+      "actual": "4 linked tests; wrong-story links: none; missing: none; Component 2 tests whose story is not in Component 1 (not shown): 0",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-07",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Live quality predictions are internally consistent",
+      "objective": "Verify the live predictions endpoint scores every Component 2 test case and that each score equals the formula applied to its returned features.",
+      "expected": "One prediction per Component 2 test case; quality_score == formula(features); formula_label consistent; predicted_label in {High, Medium, Low}.",
+      "nodeid": "tests/test_live_integration.py::test_live_predictions",
+      "status": "Passed",
+      "duration_ms": 3476.5699999999997,
+      "failure": null,
+      "actual": "4 predictions for 4 Component 2 test cases; inconsistent: none; labels: ['Medium', 'Medium', 'Medium', 'Medium']",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-08",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Live coverage-gap ranking is consistent",
+      "objective": "Verify live gaps carry a risk score equal to the mean of their factors, a matching level, and are sorted by risk.",
+      "expected": "For every gap: risk_score == mean(factors), level from 70/40 bands; list non-increasing by risk.",
+      "nodeid": "tests/test_live_integration.py::test_live_gaps",
+      "status": "Passed",
+      "duration_ms": 2058.8100000000004,
+      "failure": null,
+      "actual": "8 gaps; risk scores [36.8, 36.8, 36.8, 36.8, 36.8, 36.8, 30.8, 30.8]; inconsistent: none",
+      "evidence": [
+        {
+          "label": "Top gap",
+          "value": "{\n  \"requirement_text\": \"The system must run on Windows Server.\",\n  \"risk_score\": 36.8,\n  \"risk_level\": \"Low\",\n  \"risk_factors\": {\n    \"business_priority\": 100.0,\n    \"coverage_gap\": 20.0,\n    \"acceptance_criteria_gap\": 0.0,\n    \"test_failure_rate\": 14.1,\n    \"code_coverage_gap\": 50.0\n  },\n  \"recommended_action\": \"Execute the linked test case(s) \\u2014 acceptance criteria are covered on paper but not yet verified.\"\n}"
+        }
+      ]
+    },
+    {
+      "id": "LIVE-09",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Live dashboard agrees with the live RTM",
+      "objective": "Verify the dashboard summary is built from the same live matrix.",
+      "expected": "Dashboard matrix summary == RTM matrix summary; quality buckets sum to total tests.",
+      "nodeid": "tests/test_live_integration.py::test_live_dashboard",
+      "status": "Passed",
+      "duration_ms": 2611.1899999999996,
+      "failure": null,
+      "actual": "dashboard total_tests=8, matrix total_tests=8, buckets=8; avg quality 85.9",
+      "evidence": []
+    },
+    {
+      "id": "QP-01",
+      "module": "Quality Prediction",
+      "title": "Gherkin Given/When/Then structure detection",
+      "objective": "Verify that Given (precondition), When (test step) and Then (expected result) are detected from Gherkin text, including Background as a precondition.",
+      "expected": "Complete scenario -> all three flags = 1; scenario with only a When step -> preconditions 0, steps 1, expected result 0; a Background block counts as a precondition.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_gherkin_structure_detection",
+      "status": "Passed",
+      "duration_ms": 1.23,
+      "failure": null,
+      "actual": "Complete: Given=1 When=1 Then=1\nWhen-only: Given=0 When=1 Then=0\nBackground block: has_preconditions=1",
+      "evidence": [
+        {
+          "label": "Input (complete)",
+          "value": "Feature: User Login\n  Scenario: Successful login with valid credentials\n    Given a registered user \"alice@example.com\" exists with password \"Secret123\"\n    When the user enters email \"alice@example.com\" and password \"Secret123\" and clicks \"Login\"\n    Then the system returns status code 200 and redirects to the \"Dashboard\" page\n  Scenario: Login rejected with wrong password\n    Given a registered user \"alice@example.com\" exists with password \"Secret123\"\n    When the user enters email \"alice@example.com\" and password \"Wrong999\" and clicks \"Login\"\n    Then the system displays the error \"Invalid email or password\"\n"
+        },
+        {
+          "label": "Input (When-only)",
+          "value": "Feature: Login\n  Scenario: login works\n    When some action is performed properly on the login\n"
+        }
+      ]
+    },
+    {
+      "id": "QP-02",
+      "module": "Quality Prediction",
+      "title": "Completeness score calculation",
+      "objective": "Verify completeness = 25 x (Given + When + Then present) + 25 x min(scenarios, 3)/3.",
+      "expected": "Two-scenario complete feature -> 75 + 16.7 = 91.7; one-scenario When-only feature -> 25 + 8.3 = 33.3.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_completeness_score",
+      "status": "Passed",
+      "duration_ms": 3.1,
+      "failure": null,
+      "actual": "Complete two-scenario feature: 91.7; When-only feature: 33.3",
+      "evidence": []
+    },
+    {
+      "id": "QP-03",
+      "module": "Quality Prediction",
+      "title": "Requirement-coverage metric against acceptance criteria",
+      "objective": "Verify requirement_coverage measures how much of the linked acceptance-criteria vocabulary appears in the test, and is 0 when no criteria are linked.",
+      "expected": "Login test vs login ACs -> high coverage (>60); same test with no ACs -> 0; unrelated checkout test vs login ACs -> low (<40).",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_requirement_coverage",
+      "status": "Passed",
+      "duration_ms": 0.88,
+      "failure": null,
+      "actual": "Login test vs login ACs: 78.9; no ACs: 0.0; checkout test vs login ACs: 31.6",
+      "evidence": [
+        {
+          "label": "Acceptance criteria",
+          "value": "[\n  \"The user can login with a valid email and password\",\n  \"If the password is wrong, the system displays an invalid email or password error\"\n]"
+        }
+      ]
+    },
+    {
+      "id": "QP-04",
+      "module": "Quality Prediction",
+      "title": "Specificity score (concrete values in steps)",
+      "objective": "Verify specificity = % of Given/When/Then/And/But steps containing a quoted literal or a number.",
+      "expected": "All steps of the login test use quoted values -> 100; vague step -> 0; 1 of 2 steps specific -> 50.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_specificity_score",
+      "status": "Passed",
+      "duration_ms": 0.5,
+      "failure": null,
+      "actual": "Specific test: 100.0; vague test: 0.0; half-specific test: 50.0",
+      "evidence": []
+    },
+    {
+      "id": "QP-05",
+      "module": "Quality Prediction",
+      "title": "Ambiguity score (vague wording)",
+      "objective": "Verify ambiguity counts vague words (e.g. some, properly, appropriate) per 100 words, scaled and capped at 100.",
+      "expected": "Precise login test -> 0; 'When some action is performed properly' -> 100 (capped).",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_ambiguity_score",
+      "status": "Passed",
+      "duration_ms": 3.39,
+      "failure": null,
+      "actual": "Precise test ambiguity: 0.0; vague test ambiguity: 100.0",
+      "evidence": []
+    },
+    {
+      "id": "QP-06",
+      "module": "Quality Prediction",
+      "title": "Weighted quality-score formula",
+      "objective": "Verify the 0-100 quality score equals the documented weighted formula and that the weights sum to 1.",
+      "expected": "score = 0.20*completeness + 0.20*coverage + 0.15*specificity + 15*Then + 10*Given + 10*When + 0.10*(100-ambiguity); weights sum to 1.0.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_weighted_formula",
+      "status": "Passed",
+      "duration_ms": 0.61,
+      "failure": null,
+      "actual": "Manual formula = 94.12; compute_quality_score = 94.12; sum of weights = 1.00",
+      "evidence": [
+        {
+          "label": "Weights",
+          "value": "{\n  \"completeness_score\": 0.2,\n  \"requirement_coverage\": 0.2,\n  \"specificity_score\": 0.15,\n  \"has_expected_result\": 0.15,\n  \"has_preconditions\": 0.1,\n  \"has_test_steps\": 0.1,\n  \"low_ambiguity\": 0.1\n}"
+        }
+      ]
+    },
+    {
+      "id": "QP-07",
+      "module": "Quality Prediction",
+      "title": "High / Medium / Low classification thresholds",
+      "objective": "Verify score-to-label bands: High >= 80, Medium 60-79.99, Low < 60.",
+      "expected": "100->High, 80->High, 79.99->Medium, 60->Medium, 59.99->Low, 0->Low.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_label_thresholds",
+      "status": "Passed",
+      "duration_ms": 0.37,
+      "failure": null,
+      "actual": "100->High, 80->High, 79.99->Medium, 60->Medium, 59.99->Low, 0->Low",
+      "evidence": []
+    },
+    {
+      "id": "QP-08",
+      "module": "Quality Prediction",
+      "title": "Well-designed test case classified High",
+      "objective": "Verify the full pipeline (feature extraction -> formula -> Random Forest) rates a complete, specific, requirement-linked test case as High.",
+      "expected": "Formula label High, Random Forest label High, method = random_forest.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_prediction_high",
+      "status": "Passed",
+      "duration_ms": 11.26,
+      "failure": null,
+      "actual": "Score 94.12 (High); RF High P(High)=0.902; method=random_forest",
+      "evidence": [
+        {
+          "label": "Extracted features",
+          "value": "{\n  \"test_case\": \"t\",\n  \"description_length\": 619,\n  \"has_expected_result\": 1,\n  \"has_preconditions\": 1,\n  \"has_test_steps\": 1,\n  \"requirement_linked\": 1,\n  \"requirement_coverage\": 78.9,\n  \"ambiguity_score\": 0.0,\n  \"completeness_score\": 91.7,\n  \"specificity_score\": 100.0,\n  \"test_result\": 1.0\n}"
+        }
+      ]
+    },
+    {
+      "id": "QP-09",
+      "module": "Quality Prediction",
+      "title": "Deficient test case classified Low",
+      "objective": "Verify a vague, incomplete test case with no linked requirement is rated Low by both the formula and the model.",
+      "expected": "Formula label Low, Random Forest label Low.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_prediction_low",
+      "status": "Passed",
+      "duration_ms": 3.7299999999999995,
+      "failure": null,
+      "actual": "Score 16.66 (Low); RF Low P(Low)=1.000",
+      "evidence": [
+        {
+          "label": "Extracted features",
+          "value": "{\n  \"test_case\": \"t\",\n  \"description_length\": 95,\n  \"has_expected_result\": 0,\n  \"has_preconditions\": 0,\n  \"has_test_steps\": 1,\n  \"requirement_linked\": 0,\n  \"requirement_coverage\": 0.0,\n  \"ambiguity_score\": 100.0,\n  \"completeness_score\": 33.3,\n  \"specificity_score\": 0.0,\n  \"test_result\": 0.5\n}"
+        }
+      ]
+    },
+    {
+      "id": "QP-10",
+      "module": "Quality Prediction",
+      "title": "PASS/FAIL is not part of the quality-label formula",
+      "objective": "Verify execution outcome (test_result) has no effect on the quality score / label that defines the training labels.",
+      "expected": "Score and formula label identical for test_result = 0 (failed), 0.5 (pending), 1 (passed); test_result is not a formula weight.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_pass_fail_not_in_formula",
+      "status": "Passed",
+      "duration_ms": 0.34,
+      "failure": null,
+      "actual": "Scores by test_result: {0.0: 94.12, 0.5: 94.12, 1.0: 94.12}; weight keys: ['completeness_score', 'has_expected_result', 'has_preconditions', 'has_test_steps', 'low_ambiguity', 'requirement_coverage', 'specificity_score']",
+      "evidence": []
+    },
+    {
+      "id": "QP-11",
+      "module": "Quality Prediction",
+      "title": "Training labels derive from the formula, not from PASS/FAIL",
+      "objective": "Verify every row of the training dataset is labelled by the weighted formula over its own features, and that test_result is only weakly correlated with the label.",
+      "expected": "100% of rows: quality_label == formula label; |corr(test_result, label)| < 0.2.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_dataset_labels_from_formula",
+      "status": "Passed",
+      "duration_ms": 60.040000000000006,
+      "failure": null,
+      "actual": "Rows: 1000; formula-label agreement: 100.0%; corr(test_result, label) = 0.086",
+      "evidence": [
+        {
+          "label": "Label distribution",
+          "value": "{\n  \"Low\": 467,\n  \"High\": 331,\n  \"Medium\": 202\n}"
+        }
+      ]
+    },
+    {
+      "id": "QP-12",
+      "module": "Quality Prediction",
+      "title": "Model prediction is robust to PASS/FAIL changes",
+      "objective": "Verify the trained Random Forest does not use execution outcome as a shortcut: flipping only test_result should almost never change its prediction.",
+      "expected": "Predicted label unchanged when test_result is flipped (0<->1) for >= 95% of dataset rows.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_model_insensitive_to_pass_fail",
+      "status": "Passed",
+      "duration_ms": 28.64,
+      "failure": null,
+      "actual": "Prediction unchanged for 99.8% of 1000 rows after flipping test_result",
+      "evidence": []
+    },
+    {
+      "id": "QP-13",
+      "module": "Quality Prediction",
+      "title": "Reported held-out accuracy is reproducible",
+      "objective": "Re-create the stratified 80/20 split (random_state=42) used in training and re-evaluate the saved model, confirming the accuracy shown in the UI is genuine.",
+      "expected": "Re-computed held-out accuracy equals the stored metadata accuracy and is >= 0.85 (proposal target).",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_holdout_accuracy_reproducible",
+      "status": "Passed",
+      "duration_ms": 19.389999999999997,
+      "failure": null,
+      "actual": "Re-computed accuracy 0.9800 on 200 held-out rows; stored metadata accuracy 0.9800",
+      "evidence": []
+    },
+    {
+      "id": "QP-14",
+      "module": "Quality Prediction",
+      "title": "Formula fallback when no trained model is present",
+      "objective": "Verify the service still scores test cases (method = weighted_formula) if the model file is unavailable.",
+      "expected": "predicted_label == formula_label, empty probabilities, method = weighted_formula.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_formula_fallback",
+      "status": "Passed",
+      "duration_ms": 0.41000000000000003,
+      "failure": null,
+      "actual": "method=weighted_formula; predicted=High; formula=High; probabilities={}",
+      "evidence": []
+    },
+    {
+      "id": "QP-15",
+      "module": "Quality Prediction",
+      "title": "Empty / non-Gherkin description handled safely",
+      "objective": "Verify a test case with an empty or free-text description does not crash feature extraction and is rated Low.",
+      "expected": "No exception; all structure flags 0; label Low.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_empty_description",
+      "status": "Passed",
+      "duration_ms": 5.96,
+      "failure": null,
+      "actual": "(Given, When, Then, label): {'empty': (0, 0, 0, 'Low'), 'free text': (0, 0, 0, 'Low')}",
+      "evidence": []
+    },
+    {
+      "id": "RTM-01",
+      "module": "RTM Generation",
+      "title": "Component 1 requirement and user-story fields shown in the RTM",
+      "objective": "Verify every requirement / user-story field received from Component 1 is carried into the matching RTM row unchanged.",
+      "expected": "Row fields (requirement id/text/type/status, meeting, story id/title/text, priority, ACs) equal the Component 1 item.",
+      "level": "api",
+      "nodeid": "tests/test_rtm_matrix.py::test_c1_fields_mapped",
+      "status": "Passed",
+      "duration_ms": 16.82,
+      "failure": null,
+      "actual": "11 fields compared; mismatched: none",
+      "evidence": [
+        {
+          "label": "Component 1 item",
+          "value": "{\n  \"requirement_id\": \"R1\",\n  \"requirement_text\": \"Users shall log in\",\n  \"requirement_type\": \"Functional\",\n  \"requirement_status\": \"approved\",\n  \"meeting_title\": \"Sprint planning\",\n  \"user_story_id\": \"S1\",\n  \"user_story_title\": \"User Login\",\n  \"user_story_text\": \"As a registered user, I want to log in so that I can use the system\",\n  \"priority\": \"Must\",\n  \"user_story_status\": \"approved\",\n  \"acceptance_criteria\": [\n    \"The user can login with a valid email and password\",\n    \"If the password is wrong, the system displays an invalid email or password error\"\n  ]\n}"
+        },
+        {
+          "label": "RTM row (fields)",
+          "value": "{\n  \"requirement_id\": \"R1\",\n  \"requirement_text\": \"Users shall log in\",\n  \"requirement_type\": \"Functional\",\n  \"requirement_status\": \"approved\",\n  \"meeting_title\": \"Sprint planning\",\n  \"user_story_id\": \"S1\",\n  \"user_story_title\": \"User Login\",\n  \"user_story_text\": \"As a registered user, I want to log in so that I can use the system\",\n  \"priority\": \"Must\",\n  \"user_story_status\": \"approved\",\n  \"acceptance_criteria\": [\n    \"The user can login with a valid email and password\",\n    \"If the password is wrong, the system displays an invalid email or password error\"\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "id": "RTM-02",
+      "module": "RTM Generation",
+      "title": "Component 2 test cases linked to the correct requirement",
+      "objective": "Verify each Component 2 test case is attached only to the requirement whose user_story_id equals the test's story_id.",
+      "expected": "R1 (story S1) gets T1 and T2; R2 (story S2) gets only T3; no test appears under the wrong requirement.",
+      "level": "api",
+      "nodeid": "tests/test_rtm_matrix.py::test_c2_tests_linked_by_story",
+      "status": "Passed",
+      "duration_ms": 4.3,
+      "failure": null,
+      "actual": "Links: {'R1': ['T1', 'T2'], 'R2': ['T3']}",
+      "evidence": []
+    },
+    {
+      "id": "RTM-03",
+      "module": "RTM Generation",
+      "title": "Unmatched test case (story not in Component 1)",
+      "objective": "Verify a Component 2 test case whose story_id does not exist in the Component 1 iteration is not linked to any requirement and is not counted.",
+      "expected": "Orphan test absent from all rows; summary total_tests counts only linked tests.",
+      "level": "api",
+      "nodeid": "tests/test_rtm_matrix.py::test_unmatched_test_case",
+      "status": "Passed",
+      "duration_ms": 4.3100000000000005,
+      "failure": null,
+      "actual": "Linked tests: ['T1']; summary.total_tests = 1",
+      "evidence": []
+    },
+    {
+      "id": "RTM-04",
+      "module": "RTM Generation",
+      "title": "Requirement with no linked test case",
+      "objective": "Verify a requirement with no Component 2 test case is reported as NOT COVERED.",
+      "expected": "coverage_status = NOT COVERED, total_tests = 0, coverage_pct = 0, every AC listed as missing.",
+      "level": "api",
+      "nodeid": "tests/test_rtm_matrix.py::test_requirement_without_tests",
+      "status": "Passed",
+      "duration_ms": 3.96,
+      "failure": null,
+      "actual": "status=NOT COVERED; tests=0; coverage=0.0; missing=2",
+      "evidence": []
+    },
+    {
+      "id": "RTM-05",
+      "module": "RTM Generation",
+      "title": "Partially covered requirement",
+      "objective": "Verify a requirement whose tests cover only some acceptance criteria is PARTIAL and lists the uncovered criteria.",
+      "expected": "2 of 3 ACs covered -> PARTIAL, coverage 66.7%, missing = the account-lockout criterion.",
+      "level": "api",
+      "nodeid": "tests/test_rtm_matrix.py::test_partial_coverage",
+      "status": "Passed",
+      "duration_ms": 4.220000000000001,
+      "failure": null,
+      "actual": "status=PARTIAL; covered 2/3 (66.7%); missing=['The account is locked after five failed login attempts']",
+      "evidence": []
+    },
+    {
+      "id": "RTM-06",
+      "module": "RTM Generation",
+      "title": "Fully covered requirement",
+      "objective": "Verify a requirement whose linked tests cover every acceptance criterion is FULLY COVERED.",
+      "expected": "coverage_status = FULLY COVERED, coverage_pct = 100, no missing ACs.",
+      "level": "api",
+      "nodeid": "tests/test_rtm_matrix.py::test_full_coverage",
+      "status": "Passed",
+      "duration_ms": 4.03,
+      "failure": null,
+      "actual": "status=FULLY COVERED; coverage=100.0; missing=[]",
+      "evidence": []
+    },
+    {
+      "id": "RTM-07",
+      "module": "RTM Generation",
+      "title": "Requirement with no acceptance criteria (incomplete traceability data)",
+      "objective": "Document how the RTM treats a requirement that arrives from Component 1 with an empty acceptance-criteria list.",
+      "expected": "Implemented behaviour: with >=1 linked test the row is FULLY COVERED at 100% (nothing to miss); with no test it is NOT COVERED.",
+      "level": "api",
+      "nodeid": "tests/test_rtm_matrix.py::test_requirement_without_acs",
+      "status": "Passed",
+      "duration_ms": 4.09,
+      "failure": null,
+      "actual": "(status, coverage%, #ACs): {'R1': ('FULLY COVERED', 100.0, 0), 'R2': ('NOT COVERED', 100.0, 0)}",
+      "evidence": [
+        {
+          "label": "Note",
+          "value": "A requirement with no acceptance criteria cannot be checked at AC level, so any linked test makes it 'fully covered'. Reviewers should treat such rows as a data-quality issue in Component 1."
+        }
+      ]
+    },
+    {
+      "id": "RTM-08",
+      "module": "RTM Generation",
+      "title": "RTM summary aggregates",
+      "objective": "Verify the matrix summary counts requirements by status, tests by result, pass rate over executed tests, and average coverage.",
+      "expected": "3 requirements (1 full, 1 partial, 1 not covered); 3 tests: 1 passed, 1 failed, 1 pending; pass rate 50%; defects 1; avg coverage = mean of row coverage.",
+      "level": "api",
+      "nodeid": "tests/test_rtm_matrix.py::test_summary_aggregates",
+      "status": "Passed",
+      "duration_ms": 4.16,
+      "failure": null,
+      "actual": "Summary: {'total_requirements': 3, 'fully_covered': 1, 'partially_covered': 1, 'not_covered': 1, 'total_tests': 3, 'passed_tests': 1, 'failed_tests': 1, 'pending_tests': 1, 'pass_rate': 50.0, 'defects': 1, 'avg_coverage_pct': 55.6}",
+      "evidence": []
+    },
+    {
+      "id": "RTM-09",
+      "module": "RTM Generation",
+      "title": "Execution status derived from Component 2 results",
+      "objective": "Verify Component 2's traceability payload is mapped to test status using only ACTIVE suites and only the LATEST execution, matching scenario titles by word overlap.",
+      "expected": "Gherkin A: latest run of active suite passed -> approved (older failure ignored); Gherkin B: failed in latest run -> rejected; Gherkin C: only in an inactive suite -> pending; Gherkin D: no matching result -> pending.",
+      "level": "unit",
+      "nodeid": "tests/test_rtm_matrix.py::test_status_mapping_from_c2",
+      "status": "Passed",
+      "duration_ms": 0.69,
+      "failure": null,
+      "actual": "Statuses: {'A': 'approved', 'B': 'rejected', 'C': 'pending', 'D': 'pending'}; request: /projects/P1/traceability {'light': 'true', 'iteration_id': 'IT1'}",
+      "evidence": [
+        {
+          "label": "Component 2 payload (abridged)",
+          "value": "[\n  {\n    \"id\": \"SU1\",\n    \"is_active\": true,\n    \"source_scenario_ids\": [\n      \"A\",\n      \"B\",\n      \"D\"\n    ]\n  },\n  {\n    \"id\": \"SU0\",\n    \"is_active\": false,\n    \"source_scenario_ids\": [\n      \"C\"\n    ]\n  }\n]"
+        }
+      ]
+    },
+    {
+      "id": "RTM-10",
+      "module": "RTM Generation",
+      "title": "Generated gap test cases merged into the RTM",
+      "objective": "Verify a gap test case added to the RTM appears in its requirement row with source = generated and contributes to coverage.",
+      "expected": "Row contains the generated test (id gap-<n>, source generated); lockout AC becomes covered.",
+      "level": "api",
+      "nodeid": "tests/test_rtm_matrix.py::test_generated_tests_merged",
+      "status": "Passed",
+      "duration_ms": 19.31,
+      "failure": null,
+      "actual": "Before: PARTIAL 66.7% tests=['T1']; After: FULLY COVERED 100.0% tests=[('T1', 'C2'), ('gap-1', 'generated')]",
+      "evidence": []
+    },
+    {
+      "id": "RTM-11",
+      "module": "RTM Generation",
+      "title": "Requirement detail lookup",
+      "objective": "Verify the requirement-detail endpoint returns the matching row and 404 for an unknown requirement.",
+      "expected": "Known id -> 200 with that requirement; unknown id -> 404 'Requirement not found in this iteration'.",
+      "level": "api",
+      "nodeid": "tests/test_rtm_matrix.py::test_requirement_detail",
+      "status": "Passed",
+      "duration_ms": 5.430000000000001,
+      "failure": null,
+      "actual": "R1 -> 200 (R1); NOPE -> 404 {'detail': 'Requirement not found in this iteration'}",
+      "evidence": []
+    },
+    {
+      "id": "RTM-12",
+      "module": "RTM Generation",
+      "title": "Two requirements sharing one user story",
+      "objective": "Document the implemented behaviour when Component 1 links two requirements to the same user story.",
+      "expected": "Both requirement rows list the story's test cases (traceability is via the shared story).",
+      "level": "api",
+      "nodeid": "tests/test_rtm_matrix.py::test_shared_story",
+      "status": "Passed",
+      "duration_ms": 4.08,
+      "failure": null,
+      "actual": "Rows: {'R1': (['T1'], 'FULLY COVERED'), 'R2': (['T1'], 'PARTIAL')}",
+      "evidence": []
+    }
+  ]
+}
