@@ -1,0 +1,219 @@
+{
+  "generated_at": "2026-10-10T04:32:08.885567+00:00",
+  "duration_s": 2.68,
+  "suite": "full (offline + live integration)",
+  "command": "pytest tests/test_api_integration.py -q -p no:cacheprovider -W ignore::DeprecationWarning",
+  "environment": {
+    "python": "3.11.15",
+    "platform": "macOS-26.3-arm64-arm-64bit",
+    "pytest": "8.3.3",
+    "model": "RandomForestClassifier (scikit-learn) {'max_depth': 10, 'min_samples_leaf': 2, 'n_estimators': 150} (trained 2026-08-20)",
+    "model_holdout_accuracy": 0.98
+  },
+  "summary": {
+    "total": 13,
+    "Passed": 12,
+    "Failed": 1,
+    "Blocked": 0,
+    "Not executed": 0
+  },
+  "modules": [
+    {
+      "module": "API & Integration",
+      "total": 13,
+      "Passed": 12,
+      "Failed": 1,
+      "Blocked": 0,
+      "Not executed": 0
+    }
+  ],
+  "cases": [
+    {
+      "id": "API-01",
+      "module": "API & Integration",
+      "title": "Health / readiness probe",
+      "objective": "Verify /api/health reports ok only when the database is reachable.",
+      "expected": "HTTP 200 {status: ok, database: up} (test SQLite database).",
+      "level": "unit",
+      "nodeid": "tests/test_api_integration.py::test_health",
+      "status": "Passed",
+      "duration_ms": 839.3000000000001,
+      "failure": null,
+      "actual": "HTTP 200 {'status': 'ok', 'database': 'up'}",
+      "evidence": []
+    },
+    {
+      "id": "API-02",
+      "module": "API & Integration",
+      "title": "Frontend-to-backend endpoint contract",
+      "objective": "Parse every request in frontend/src/api/rtmApi.ts and verify a backend route exists with the same path and HTTP method.",
+      "expected": "All frontend RTM calls resolve to an existing FastAPI route (0 unmatched).",
+      "level": "unit",
+      "nodeid": "tests/test_api_integration.py::test_frontend_contract",
+      "status": "Failed",
+      "duration_ms": 4.95,
+      "failure": "        from app.main import app\n        routes = []\n        for r in app.routes:\n            if hasattr(r, \"methods\"):\n                rx = \"^\" + re.sub(r\"\\{[^}]+\\}\", \"[^/]+\", r.path) + \"$\"\n                routes.append((rx, r.methods))\n        calls = _frontend_calls()\n        unmatched = [c for c in calls if not any(re.match(rx, c[1]) and c[0] in methods for rx, methods in routes)]\n        record.actual(f\"{len(calls)} frontend calls checked; unmatched: {unmatched or 'none'}\")\n        record.add(\"Frontend calls\", [f\"{m} {p}\" for m, p in calls])\n>       assert len(calls) >= 15 and unmatched == []\nE       AssertionError: assert (14 >= 15)\nE        +  where 14 = len([('GET', '/api/rtm/matrix'), ('GET', '/api/rtm/matrix/requirements/{x}'), ('GET', '/api/dashboard/summary'), ('GET', '/api/inventory'), ('GET', '/api/portfolio/analysis'), ('GET', '/api/rtm/c2-gaps'), ...])\ntests/test_api_integration.py:58: AssertionError",
+      "actual": "14 frontend calls checked; unmatched: none",
+      "evidence": [
+        {
+          "label": "Frontend calls",
+          "value": "[\n  \"GET /api/rtm/matrix\",\n  \"GET /api/rtm/matrix/requirements/{x}\",\n  \"GET /api/dashboard/summary\",\n  \"GET /api/inventory\",\n  \"GET /api/portfolio/analysis\",\n  \"GET /api/rtm/c2-gaps\",\n  \"POST /api/rtm/c2-gaps/generate-test-case\",\n  \"POST /api/rtm/c2-gaps/generate-all\",\n  \"POST /api/rtm/c2-gaps/{x}/add\",\n  \"GET /api/rtm/c2-gaps/generated\",\n  \"GET /api/ml/c2-quality/predictions/{x}\",\n  \"POST /api/ml/c2-quality/improve\",\n  \"POST /api/coverage/analyze\",\n  \"GET /api/coverage/report\"\n]"
+        }
+      ]
+    },
+    {
+      "id": "API-03",
+      "module": "API & Integration",
+      "title": "Response shape matches the frontend Matrix type",
+      "objective": "Verify the matrix response contains every field the RTM Matrix page reads (types/rtm.ts Matrix / MatrixRow).",
+      "expected": "Top-level keys project_id, iteration_id, summary, rows; each row has requirement, story, AC, coverage and test fields.",
+      "level": "unit",
+      "nodeid": "tests/test_api_integration.py::test_matrix_shape",
+      "status": "Passed",
+      "duration_ms": 7.0600000000000005,
+      "failure": null,
+      "actual": "Top-level keys: ['iteration_id', 'project_id', 'rows', 'summary']; missing row keys: none; test keys: ['description', 'id', 'source', 'status', 'title']",
+      "evidence": []
+    },
+    {
+      "id": "API-04",
+      "module": "API & Integration",
+      "title": "Component 1 unavailable -> clear 503 error",
+      "objective": "Verify the RTM endpoints return HTTP 503 with an explanatory message (shown in the UI banner) when Component 1 is down.",
+      "expected": "Matrix, gaps, dashboard, inventory and portfolio -> 503 with 'Component 1' in detail.",
+      "level": "unit",
+      "nodeid": "tests/test_api_integration.py::test_c1_down",
+      "status": "Passed",
+      "duration_ms": 7.46,
+      "failure": null,
+      "actual": "/api/rtm/matrix -> 503; /api/rtm/c2-gaps -> 503; /api/dashboard/summary -> 503; /api/inventory -> 503; /api/portfolio/analysis -> 503; detail: Component 1 request failed (simulated outage)",
+      "evidence": []
+    },
+    {
+      "id": "API-05",
+      "module": "API & Integration",
+      "title": "Component 2 unavailable -> graceful degradation",
+      "objective": "Verify the RTM still renders requirements (with no tests) when Component 2 is down, instead of failing the page.",
+      "expected": "Matrix HTTP 200; requirement rows present; total_tests 0; rows NOT COVERED.",
+      "level": "unit",
+      "nodeid": "tests/test_api_integration.py::test_c2_down",
+      "status": "Passed",
+      "duration_ms": 4.35,
+      "failure": null,
+      "actual": "HTTP 200; rows 1; total_tests 0; status NOT COVERED",
+      "evidence": []
+    },
+    {
+      "id": "API-06",
+      "module": "API & Integration",
+      "title": "Missing required query parameters rejected",
+      "objective": "Verify project-scoped endpoints reject requests without project_id / iteration_id.",
+      "expected": "HTTP 422 for matrix, gaps, dashboard, inventory, portfolio when iteration_id is omitted.",
+      "level": "unit",
+      "nodeid": "tests/test_api_integration.py::test_missing_params",
+      "status": "Passed",
+      "duration_ms": 7.1899999999999995,
+      "failure": null,
+      "actual": "{'/api/rtm/matrix': 422, '/api/rtm/c2-gaps': 422, '/api/dashboard/summary': 422, '/api/inventory': 422, '/api/portfolio/analysis': 422}",
+      "evidence": []
+    },
+    {
+      "id": "API-07",
+      "module": "API & Integration",
+      "title": "Model and dataset transparency endpoints",
+      "objective": "Verify model-info and dataset-info return the real trained-model report and dataset statistics used on the Quality Prediction page.",
+      "expected": "model-info: trained true, RandomForest, matches c2_quality_model_metadata.json; dataset-info: 1,000 rows, labels Low/Medium/High.",
+      "level": "unit",
+      "nodeid": "tests/test_api_integration.py::test_model_dataset_info",
+      "status": "Passed",
+      "duration_ms": 1563.2,
+      "failure": null,
+      "actual": "trained=True; algorithm=RandomForestClassifier (scikit-learn); accuracy=0.98; dataset rows=1000; labels=[{'label': 'Low', 'count': 467}, {'label': 'Medium', 'count': 202}, {'label': 'High', 'count': 331}]",
+      "evidence": []
+    },
+    {
+      "id": "API-08",
+      "module": "API & Integration",
+      "title": "Quality predictions endpoint for a project",
+      "objective": "Verify every Component 2 test case of a project gets features, score, formula label and model label, using the linked ACs from Component 1.",
+      "expected": "One prediction per test case; requirement_linked = 1 when its story has ACs; labels within {High, Medium, Low}.",
+      "level": "unit",
+      "nodeid": "tests/test_api_integration.py::test_predictions_endpoint",
+      "status": "Passed",
+      "duration_ms": 11.14,
+      "failure": null,
+      "actual": "(linked, score, label): {'T1': (1, 94.12, 'High'), 'T2': (0, 16.66, 'Low')}",
+      "evidence": []
+    },
+    {
+      "id": "API-09",
+      "module": "API & Integration",
+      "title": "Dashboard, inventory and portfolio consistency",
+      "objective": "Verify the dashboard, inventory and portfolio endpoints are built from the same matrix and agree with each other.",
+      "expected": "Dashboard quality buckets sum to matrix total_tests; inventory lists each test once with a quality score; portfolio flags the duplicate, the failing Must test and the vague test.",
+      "level": "unit",
+      "nodeid": "tests/test_api_integration.py::test_dashboard_inventory_portfolio",
+      "status": "Passed",
+      "duration_ms": 46.31,
+      "failure": null,
+      "actual": "dashboard buckets=4, matrix tests=4; inventory=[('A', 'High'), ('B', 'High'), ('C', 'Medium'), ('D', 'Low')]; portfolio={'redundant': ['B'], 'critical': ['C'], 'weak': ['D']}",
+      "evidence": []
+    },
+    {
+      "id": "API-10",
+      "module": "API & Integration",
+      "title": "Component 2 client: unreachable service raises a typed error",
+      "objective": "Verify the real Component 2 HTTP client converts connection failures into Component2Unavailable (pointed at a closed local port; Component 2 itself is not modified).",
+      "expected": "get_traceability_test_cases raises Component2Unavailable; is_reachable() returns False.",
+      "level": "unit",
+      "nodeid": "tests/test_api_integration.py::test_c2_client_unreachable",
+      "status": "Passed",
+      "duration_ms": 24.72,
+      "failure": null,
+      "actual": "Raised: Component2Unavailable: Component 2 request failed (http://127.0.0.1:9/projects/P1/traceability): All connection attempts failed; is_reachable=False",
+      "evidence": []
+    },
+    {
+      "id": "API-11",
+      "module": "API & Integration",
+      "title": "Component 1 client: unreachable service raises a typed error",
+      "objective": "Verify the real Component 1 HTTP client converts connection failures into Component1Unavailable.",
+      "expected": "get_requirements_with_stories raises Component1Unavailable; the external proxy endpoint returns 503.",
+      "level": "unit",
+      "nodeid": "tests/test_api_integration.py::test_c1_client_unreachable",
+      "status": "Passed",
+      "duration_ms": 18.57,
+      "failure": null,
+      "actual": "Client raised Component1Unavailable; proxy endpoint -> HTTP 503",
+      "evidence": []
+    },
+    {
+      "id": "API-12",
+      "module": "API & Integration",
+      "title": "Code-coverage analysis disabled safely",
+      "objective": "Verify POST /api/coverage/analyze returns 503 (no clone, no build) when COVERAGE_ENABLED=false, as in the test and Docker deployments.",
+      "expected": "HTTP 503 with 'disabled' in the detail; report endpoint still answers.",
+      "level": "unit",
+      "nodeid": "tests/test_api_integration.py::test_coverage_disabled",
+      "status": "Passed",
+      "duration_ms": 9.09,
+      "failure": null,
+      "actual": "analyze -> HTTP 503: Code-coverage analysis is disabled in this deployment (the coverage runner toolc; report -> HTTP 200 status=IDLE",
+      "evidence": []
+    },
+    {
+      "id": "API-13",
+      "module": "API & Integration",
+      "title": "Existing functionality unaffected by the testing component",
+      "objective": "Verify all pre-existing RTM routes are still registered after adding the testing endpoints.",
+      "expected": "All 17 pre-existing RTM route paths present in the application.",
+      "level": "unit",
+      "nodeid": "tests/test_api_integration.py::test_existing_routes_intact",
+      "status": "Passed",
+      "duration_ms": 0.28,
+      "failure": null,
+      "actual": "17/17 pre-existing routes present; missing: none",
+      "evidence": []
+    }
+  ]
+}

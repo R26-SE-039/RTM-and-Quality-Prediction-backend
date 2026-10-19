@@ -1,0 +1,158 @@
+{
+  "generated_at": "2026-10-10T04:37:38.370664+00:00",
+  "duration_s": 0.43,
+  "suite": "full (offline + live integration)",
+  "command": "pytest -q -rs tests/test_live_integration.py",
+  "environment": {
+    "python": "3.11.15",
+    "platform": "macOS-26.3-arm64-arm-64bit",
+    "pytest": "8.3.3",
+    "model": "RandomForestClassifier (scikit-learn) {'max_depth': 10, 'min_samples_leaf': 2, 'n_estimators': 150} (trained 2026-08-20)",
+    "model_holdout_accuracy": 0.98
+  },
+  "summary": {
+    "total": 9,
+    "Passed": 1,
+    "Failed": 0,
+    "Blocked": 8,
+    "Not executed": 0
+  },
+  "modules": [
+    {
+      "module": "Live Integration",
+      "total": 9,
+      "Passed": 1,
+      "Failed": 0,
+      "Blocked": 8,
+      "Not executed": 0
+    }
+  ],
+  "cases": [
+    {
+      "id": "LIVE-01",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "RTM service running with its database",
+      "objective": "Verify the deployed RTM backend answers its readiness probe.",
+      "expected": "GET http://localhost:8003/api/health -> 200 {status: ok, database: up}.",
+      "nodeid": "tests/test_live_integration.py::test_live_rtm_health",
+      "status": "Passed",
+      "duration_ms": 344.42,
+      "failure": null,
+      "actual": "HTTP 200 {\"status\":\"ok\",\"database\":\"up\"}",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-02",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "API gateway routes RTM requests",
+      "objective": "Verify the path the browser uses (gateway /api/rtm prefix) reaches the RTM backend.",
+      "expected": "GET http://127.0.0.1:9/api/rtm/api/health -> 200 with database up.",
+      "nodeid": "tests/test_live_integration.py::test_live_gateway",
+      "status": "Blocked",
+      "duration_ms": 11.520000000000001,
+      "failure": "BLOCKED: http://127.0.0.1:9/api/rtm/api/health unreachable (ConnectError)",
+      "actual": "",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-03",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Component 1 requirements-with-stories contract",
+      "objective": "Verify Component 1 serves the endpoint and fields the RTM depends on, for a real iteration.",
+      "expected": "HTTP 200 with items[]; every item has requirement_id, requirement_text, user_story_id, priority, acceptance_criteria.",
+      "nodeid": "tests/test_live_integration.py::test_live_c1_contract",
+      "status": "Blocked",
+      "duration_ms": 7.6,
+      "failure": "BLOCKED: Component 2 unreachable at http://127.0.0.1:9 (ConnectError)",
+      "actual": "",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-04",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Component 2 traceability contract",
+      "objective": "Verify Component 2's traceability payload has the stories / gherkin_scenarios / suites / executions structure the RTM parses.",
+      "expected": "Keys stories, suites, executions present; each Gherkin scenario has id and gherkin_text.",
+      "nodeid": "tests/test_live_integration.py::test_live_c2_contract",
+      "status": "Blocked",
+      "duration_ms": 0.18,
+      "failure": "BLOCKED: Component 2 unreachable at http://127.0.0.1:9 (ConnectError)",
+      "actual": "",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-05",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Live RTM rows match Component 1 requirements",
+      "objective": "Verify the live RTM has exactly one row per Component 1 (requirement, user story) item with identical requirement / story fields.",
+      "expected": "One RTM row per Component 1 item, matched on (requirement_id, user_story_id); text, story title and priority identical.",
+      "nodeid": "tests/test_live_integration.py::test_live_rows_match_c1",
+      "status": "Blocked",
+      "duration_ms": 0.15,
+      "failure": "BLOCKED: Component 2 unreachable at http://127.0.0.1:9 (ConnectError)",
+      "actual": "",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-06",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Live test-case linkage matches Component 2 stories",
+      "objective": "Verify every test in the live RTM belongs to the same user story in Component 2, and every Component 2 test case whose story is in the iteration appears in the RTM.",
+      "expected": "0 tests linked to the wrong story; 0 Component 2 test cases (for stories present in Component 1) missing from the RTM.",
+      "nodeid": "tests/test_live_integration.py::test_live_linkage",
+      "status": "Blocked",
+      "duration_ms": 0.15,
+      "failure": "BLOCKED: Component 2 unreachable at http://127.0.0.1:9 (ConnectError)",
+      "actual": "",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-07",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Live quality predictions are internally consistent",
+      "objective": "Verify the live predictions endpoint scores every Component 2 test case and that each score equals the formula applied to its returned features.",
+      "expected": "One prediction per Component 2 test case; quality_score == formula(features); formula_label consistent; predicted_label in {High, Medium, Low}.",
+      "nodeid": "tests/test_live_integration.py::test_live_predictions",
+      "status": "Blocked",
+      "duration_ms": 0.30000000000000004,
+      "failure": "BLOCKED: Component 2 unreachable at http://127.0.0.1:9 (ConnectError)",
+      "actual": "",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-08",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Live coverage-gap ranking is consistent",
+      "objective": "Verify live gaps carry a risk score equal to the mean of their factors, a matching level, and are sorted by risk.",
+      "expected": "For every gap: risk_score == mean(factors), level from 70/40 bands; list non-increasing by risk.",
+      "nodeid": "tests/test_live_integration.py::test_live_gaps",
+      "status": "Blocked",
+      "duration_ms": 0.14,
+      "failure": "BLOCKED: Component 2 unreachable at http://127.0.0.1:9 (ConnectError)",
+      "actual": "",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-09",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Live dashboard agrees with the live RTM",
+      "objective": "Verify the dashboard summary is built from the same live matrix.",
+      "expected": "Dashboard matrix summary == RTM matrix summary; quality buckets sum to total tests.",
+      "nodeid": "tests/test_live_integration.py::test_live_dashboard",
+      "status": "Blocked",
+      "duration_ms": 0.16,
+      "failure": "BLOCKED: Component 2 unreachable at http://127.0.0.1:9 (ConnectError)",
+      "actual": "",
+      "evidence": []
+    }
+  ]
+}

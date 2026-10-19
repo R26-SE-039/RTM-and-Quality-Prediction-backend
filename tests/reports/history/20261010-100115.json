@@ -1,0 +1,186 @@
+{
+  "generated_at": "2026-10-10T04:31:15.358510+00:00",
+  "duration_s": 2.64,
+  "suite": "full (offline + live integration)",
+  "command": "pytest tests/test_test_improvement.py -q -p no:cacheprovider -W ignore::DeprecationWarning",
+  "environment": {
+    "python": "3.11.15",
+    "platform": "macOS-26.3-arm64-arm-64bit",
+    "pytest": "8.3.3",
+    "model": "RandomForestClassifier (scikit-learn) {'max_depth': 10, 'min_samples_leaf': 2, 'n_estimators': 150} (trained 2026-08-20)",
+    "model_holdout_accuracy": 0.98
+  },
+  "summary": {
+    "total": 9,
+    "Passed": 7,
+    "Failed": 2,
+    "Blocked": 0,
+    "Not executed": 0
+  },
+  "modules": [
+    {
+      "module": "Intelligent Test Improvement",
+      "total": 9,
+      "Passed": 7,
+      "Failed": 2,
+      "Blocked": 0,
+      "Not executed": 0
+    }
+  ],
+  "cases": [
+    {
+      "id": "IMP-01",
+      "module": "Intelligent Test Improvement",
+      "title": "Quality gaps identified in a deficient test case",
+      "objective": "Verify analyze_gaps reports each weak model feature with a status and a concrete recommendation.",
+      "expected": "Vague When-only test with no linked requirement -> 7 gaps: Preconditions, Expected Result, Specificity, Clarity, Requirement Coverage, Completeness, Requirement Link (Test Steps present, so not flagged).",
+      "level": "unit",
+      "nodeid": "tests/test_test_improvement.py::test_gaps_identified",
+      "status": "Passed",
+      "duration_ms": 0.7999999999999999,
+      "failure": null,
+      "actual": "7 gaps: ['Preconditions', 'Expected Result', 'Specificity', 'Clarity', 'Requirement Coverage', 'Completeness', 'Requirement Link']",
+      "evidence": [
+        {
+          "label": "Gap details",
+          "value": "[\n  {\n    \"area\": \"has_preconditions\",\n    \"label\": \"Preconditions\",\n    \"status\": \"Missing\",\n    \"severity\": \"warning\",\n    \"recommendation\": \"Add the required initial system/user conditions (a Given step).\"\n  },\n  {\n    \"area\": \"has_expected_result\",\n    \"label\": \"Expected Result\",\n    \"status\": \"Missing\",\n    \"severity\": \"warning\",\n    \"recommendation\": \"Define the exact expected system response (a Then step).\"\n  },\n  {\n    \"area\": \"specificity_score\",\n    \"label\": \"Specificity\",\n    \"status\": \"Generic\",\n    \"severity\": \"warning\",\n    \"recommendation\": \"Use concrete values, field names, and button labels instead of vague wording.\"\n  },\n  {\n    \"area\": \"ambiguity_score\",\n    \"label\": \"Clarity\",\n    \"status\": \"100/100 ambiguous\",\n    \"severity\": \"warning\",\n    \"recommendation\": \"Replace vague words (e.g. \\\"some\\\", \\\"properly\\\", \\\"appropriate\\\") with precise, testable statements.\"\n  },\n  {\n    \"area\": \"requirement_coverage\",\n    \"label\": \"Requirement Coverage\",\n    \"status\": \"0%\",\n    \"severity\": \"warning\",\n    \"recommendation\": \"Add scenario steps that explicitly cover the linked requirement's acceptance criteria.\"\n  },\n  {\n    \"area\": \"completeness_score\",\n    \"label\": \"Completeness\",\n    \"status\": \"33/100\",\n    \"severity\": \"warning\",\n    \"recommendation\": \"Ensure the scenario has a clear Given/When/Then structure with enough scenario coverage.\"\n  },\n  {\n    \"area\": \"requirement_linked\",\n    \"label\": \"Requirement Link\",\n    \"status\": \"Not Linked\",\n    \"severity\": \"warning\",\n    \"recommendation\": \"Link this test case to its source requirement/user story for traceability.\"\n  }\n]"
+        }
+      ]
+    },
+    {
+      "id": "IMP-02",
+      "module": "Intelligent Test Improvement",
+      "title": "Improved Given/When/Then scenarios generated",
+      "objective": "Verify the improved test is valid Gherkin with a happy-path and an invalid-input scenario, each with Given/When/Then, and folds in the linked ACs.",
+      "expected": "2 scenarios; each has Given, When, Then; an 'And the result satisfies the linked acceptance criteria' step containing the AC text.",
+      "level": "unit",
+      "nodeid": "tests/test_test_improvement.py::test_improved_gherkin_structure",
+      "status": "Passed",
+      "duration_ms": 2163.6899999999996,
+      "failure": null,
+      "actual": "HTTP 200; scenarios=2; each has G/W/T: [True, True]; AC folded in: True",
+      "evidence": [
+        {
+          "label": "Improved Gherkin",
+          "value": "Feature: Login\n\n  Scenario: Improved \u2014 User Login succeeds\n    Given a registered user is authenticated and on the \"User Login\" page\n    When the user performs the required action for \"User Login\" with valid input values\n    Then the system completes \"User Login\" successfully and returns a confirmation\n    And the result satisfies the linked acceptance criteria: The user can login with a valid email and password If the password is wrong, the system displays an invalid email or password error\n\n  Scenario: Improved \u2014 User Login handles invalid input\n    Given a registered user is authenticated and on the \"User Login\" page\n    When the user performs the required action for \"User Login\" with invalid or missing input values\n    Then the system rejects the action and displays a specific validation error message\n"
+        }
+      ]
+    },
+    {
+      "id": "IMP-03",
+      "module": "Intelligent Test Improvement",
+      "title": "Quality score recalculated through the same pipeline",
+      "objective": "Verify the 'after' score is measured by re-running feature extraction and the model on the rewritten text, not asserted.",
+      "expected": "improved_quality_score == compute_quality_score(improved_features); improved_features == extract_features(improved_description); score rises from Low to High.",
+      "level": "unit",
+      "nodeid": "tests/test_test_improvement.py::test_score_recalculated",
+      "status": "Passed",
+      "duration_ms": 11.040000000000001,
+      "failure": null,
+      "actual": "Before 19.82 (Low) -> after 94.05 (High/High); features re-extracted identically: True",
+      "evidence": []
+    },
+    {
+      "id": "IMP-04",
+      "module": "Intelligent Test Improvement",
+      "title": "Improvement preserves the original test-case steps",
+      "objective": "Check whether the improvement keeps the original Given/When/Then steps and only adds what is missing (research requirement).",
+      "expected": "Every original step line of the test appears in the improved Gherkin.",
+      "level": "unit",
+      "nodeid": "tests/test_test_improvement.py::test_preserves_original_steps",
+      "status": "Failed",
+      "duration_ms": 10.56,
+      "failure": "        original = _steps(LOGIN_HIGH)\n        kept = [s for s in original if s in out[\"improved_description\"]]\n        record.actual(f\"{len(kept)} of {len(original)} original steps preserved in the improved text\")\n        record.add(\"Original steps\", original)\n        record.add(\"Improved Gherkin\", out[\"improved_description\"])\n        record.add(\"Finding\", \"generate_improved_gherkin() rebuilds the scenario from a template using only the title, story title and \"\n                              \"acceptance criteria; it never reads the original description, so original steps and concrete values are replaced, not extended.\")\n>       assert kept == original, f\"only {len(kept)}/{len(original)} original steps preserved\"\nE       AssertionError: only 0/6 original steps preserved\nE       assert [] == ['Given a reg...or password\"']\nE         \nE         Right contains 6 more items, first extra item: 'Given a registered user \"alice@example.com\" exists with password \"Secret123\"'\nE         Use -v to get more diff\ntests/test_test_improvement.py:82: AssertionError",
+      "actual": "0 of 6 original steps preserved in the improved text",
+      "evidence": [
+        {
+          "label": "Original steps",
+          "value": "[\n  \"Given a registered user \\\"alice@example.com\\\" exists with password \\\"Secret123\\\"\",\n  \"When the user enters email \\\"alice@example.com\\\" and password \\\"Secret123\\\" and clicks \\\"Login\\\"\",\n  \"Then the system returns status code 200 and redirects to the \\\"Dashboard\\\" page\",\n  \"Given a registered user \\\"alice@example.com\\\" exists with password \\\"Secret123\\\"\",\n  \"When the user enters email \\\"alice@example.com\\\" and password \\\"Wrong999\\\" and clicks \\\"Login\\\"\",\n  \"Then the system displays the error \\\"Invalid email or password\\\"\"\n]"
+        },
+        {
+          "label": "Improved Gherkin",
+          "value": "Feature: User Login\n\n  Scenario: Improved \u2014 User Login succeeds\n    Given a registered user is authenticated and on the \"User Login\" page\n    When the user performs the required action for \"User Login\" with valid input values\n    Then the system completes \"User Login\" successfully and returns a confirmation\n    And the result satisfies the linked acceptance criteria: The user can login with a valid email and password If the password is wrong, the system displays an invalid email or password error\n\n  Scenario: Improved \u2014 User Login handles invalid input\n    Given a registered user is authenticated and on the \"User Login\" page\n    When the user performs the required action for \"User Login\" with invalid or missing input values\n    Then the system rejects the action and displays a specific validation error message\n"
+        },
+        {
+          "label": "Finding",
+          "value": "generate_improved_gherkin() rebuilds the scenario from a template using only the title, story title and acceptance criteria; it never reads the original description, so original steps and concrete values are replaced, not extended."
+        }
+      ]
+    },
+    {
+      "id": "IMP-05",
+      "module": "Intelligent Test Improvement",
+      "title": "Improvement preserves the feature title",
+      "objective": "Verify the improved Gherkin keeps the original test-case title as its Feature name.",
+      "expected": "Improved text starts with 'Feature: <original title>'.",
+      "level": "unit",
+      "nodeid": "tests/test_test_improvement.py::test_preserves_title",
+      "status": "Passed",
+      "duration_ms": 10.270000000000001,
+      "failure": null,
+      "actual": "First line: 'Feature: Login with email'",
+      "evidence": []
+    },
+    {
+      "id": "IMP-06",
+      "module": "Intelligent Test Improvement",
+      "title": "Already-complete test case: no gaps reported",
+      "objective": "Verify a complete, specific, requirement-linked test produces no quality gaps.",
+      "expected": "analyze_gaps returns an empty list.",
+      "level": "unit",
+      "nodeid": "tests/test_test_improvement.py::test_complete_no_gaps",
+      "status": "Passed",
+      "duration_ms": 0.34,
+      "failure": null,
+      "actual": "Gaps: none; features: completeness 91.7, specificity 100.0, ambiguity 0.0, coverage 78.9",
+      "evidence": []
+    },
+    {
+      "id": "IMP-07",
+      "module": "Intelligent Test Improvement",
+      "title": "Already-complete test case: score not reduced by improvement",
+      "objective": "Check that running the improvement on an already high-quality test does not lower its measured quality.",
+      "expected": "improved_quality_score >= original quality_score.",
+      "level": "unit",
+      "nodeid": "tests/test_test_improvement.py::test_complete_not_degraded",
+      "status": "Failed",
+      "duration_ms": 10.26,
+      "failure": "client = <starlette.testclient.TestClient object at 0x111003d10>\nrecord = <tests.reporting.Record object at 0x1110023d0>\n    @case(id=\"IMP-07\", module=M, title=\"Already-complete test case: score not reduced by improvement\",\n          objective=\"Check that running the improvement on an already high-quality test does not lower its measured quality.\",\n          expected=\"improved_quality_score >= original quality_score.\")\n    def test_complete_not_degraded(client, record):\n        p = _payload(LOGIN_HIGH, \"User Login\", LOGIN_AC)\n        out = client.post(\"/api/ml/c2-quality/improve\", json=p).json()\n        record.actual(f\"Original {p['quality_score']} ({p['predicted_label']}) -> improved {out['improved_quality_score']} ({out['improved_predicted_label']}); \"\n                      f\"specificity {p['features']['specificity_score']} -> {out['improved_features']['specificity_score']}\")\n>       assert out[\"improved_quality_score\"] >= p[\"quality_score\"]\nE       assert 94.05 >= 94.12\ntests/test_test_improvement.py:114: AssertionError",
+      "actual": "Original 94.12 (High) -> improved 94.05 (High); specificity 100.0 -> 71.4",
+      "evidence": []
+    },
+    {
+      "id": "IMP-08",
+      "module": "Intelligent Test Improvement",
+      "title": "No linked requirement information available",
+      "objective": "Verify that without acceptance criteria or requirement text the improvement does not invent requirement coverage and the requirement-link gap remains visible.",
+      "expected": "Improved features: requirement_linked 0 and requirement_coverage 0; gaps include 'Requirement Link'; no 'satisfies the' line in the text.",
+      "level": "unit",
+      "nodeid": "tests/test_test_improvement.py::test_no_requirement_info",
+      "status": "Passed",
+      "duration_ms": 9.59,
+      "failure": null,
+      "actual": "requirement_linked=0, coverage=0.0; gaps=['Preconditions', 'Expected Result', 'Specificity', 'Clarity', 'Requirement Coverage', 'Completeness', 'Requirement Link']; score 75.84 (Medium)",
+      "evidence": [
+        {
+          "label": "Improved Gherkin",
+          "value": "Feature: Login\n\n  Scenario: Improved \u2014 Login succeeds\n    Given a registered user is authenticated and on the \"Login\" page\n    When the user performs the required action for \"Login\" with valid input values\n    Then the system completes \"Login\" successfully and returns a confirmation\n\n  Scenario: Improved \u2014 Login handles invalid input\n    Given a registered user is authenticated and on the \"Login\" page\n    When the user performs the required action for \"Login\" with invalid or missing input values\n    Then the system rejects the action and displays a specific validation error message\n"
+        }
+      ]
+    },
+    {
+      "id": "IMP-09",
+      "module": "Intelligent Test Improvement",
+      "title": "Invalid improvement request rejected",
+      "objective": "Verify the improve endpoint validates its payload.",
+      "expected": "Missing 'features' -> HTTP 422 with a validation error naming the field.",
+      "level": "unit",
+      "nodeid": "tests/test_test_improvement.py::test_improve_validation",
+      "status": "Passed",
+      "duration_ms": 3.9499999999999997,
+      "failure": null,
+      "actual": "HTTP 422; missing fields reported: ['features', 'quality_score', 'predicted_label']",
+      "evidence": []
+    }
+  ]
+}

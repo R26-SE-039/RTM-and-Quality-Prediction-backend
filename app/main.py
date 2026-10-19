@@ -17,6 +17,7 @@ from app.routers import (
     ml,
     portfolio,
     rtm,
+    testing,
 )
 
 load_dotenv()
@@ -69,3 +70,4 @@ app.include_router(github.router)
 app.include_router(ml.router)
 app.include_router(external.router)
 app.include_router(external.component1_router)
+app.include_router(testing.router)
