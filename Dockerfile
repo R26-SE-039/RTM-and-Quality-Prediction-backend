@@ -34,6 +34,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./app ./app
 
+# Research test suite for the dashboard's Testing page. Running it is gated by
+# TESTING_ENABLED at runtime; the report is read-only otherwise.
+COPY requirements-dev.txt pytest.ini ./
+RUN pip install --no-cache-dir -r requirements-dev.txt
+COPY ./tests ./tests
+
 EXPOSE 8003
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
