@@ -15,6 +15,7 @@ import tempfile
 _TMP = tempfile.mkdtemp(prefix="rtm-tests-")
 os.environ["DATABASE_URL"] = f"sqlite:///{os.path.join(_TMP, 'rtm_test.db')}"
 os.environ["COVERAGE_ENABLED"] = "false"  # never clone/run real repositories from tests
+os.environ["TESTING_ENABLED"] = "true"  # the testing-dashboard endpoint tests exercise the write routes
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT not in sys.path:

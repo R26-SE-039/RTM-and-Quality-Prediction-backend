@@ -27,6 +27,9 @@ REPORT_PATH = os.path.join(TESTS_DIR, "reports", "latest.json")
 MANUAL_DEFS_PATH = os.path.join(TESTS_DIR, "manual_checks.json")
 MANUAL_RESULTS_PATH = os.path.join(TESTS_DIR, "reports", "manual_results.json")
 RUN_TIMEOUT_SECONDS = 900
+# Running pytest and recording manual results are write actions; they stay off
+# unless the deployment opts in (TESTING_ENABLED=true). Reading the report is always allowed.
+TESTING_ENABLED = os.getenv("TESTING_ENABLED", "false").strip().lower() in ("1", "true", "yes")
 
 _lock = threading.Lock()
 _run_state: dict = {"status": "idle", "suite": None, "started_at": None, "finished_at": None, "exit_code": None, "output_tail": ""}
@@ -86,6 +89,7 @@ def get_report():
     available = os.path.isdir(TESTS_DIR)
     return {
         "suite_available": available,
+        "run_enabled": TESTING_ENABLED,
         "report": _read_json(REPORT_PATH, None),
         "manual_checks": _manual_checks() if available else [],
         "run": dict(_run_state),
@@ -94,12 +98,18 @@ def get_report():
 
 @router.post("/run", status_code=202)
 def start_run(payload: RunRequest):
+    if not TESTING_ENABLED:
+        raise HTTPException(status_code=403, detail="Running tests is disabled in this deployment (TESTING_ENABLED).")
     if not os.path.isdir(TESTS_DIR):
         raise HTTPException(status_code=503, detail="The test suite is not available in this deployment.")
     if not _lock.acquire(blocking=False):
         raise HTTPException(status_code=409, detail="A test run is already in progress.")
     _run_state.update(status="running", suite=payload.suite, started_at=_now(), finished_at=None, exit_code=None, output_tail="")
-    threading.Thread(target=_run, args=(payload.suite,), daemon=True).start()
+    try:
+        threading.Thread(target=_run, args=(payload.suite,), daemon=True).start()
+    except Exception:
+        _lock.release()
+        raise
     return dict(_run_state)
 
 
@@ -110,6 +120,8 @@ def get_run_status():
 
 @router.put("/manual/{check_id}")
 def record_manual_result(check_id: str, payload: ManualResult):
+    if not TESTING_ENABLED:
+        raise HTTPException(status_code=403, detail="Recording manual results is disabled in this deployment (TESTING_ENABLED).")
     ids = {d["id"] for d in _read_json(MANUAL_DEFS_PATH, [])}
     if check_id not in ids:
         raise HTTPException(status_code=404, detail="Unknown manual check.")
