@@ -1,0 +1,276 @@
+{
+  "generated_at": "2026-10-10T04:28:52.827794+00:00",
+  "duration_s": 2.03,
+  "suite": "full (offline + live integration)",
+  "command": "pytest tests/test_quality_prediction.py -q -p no:cacheprovider",
+  "environment": {
+    "python": "3.11.15",
+    "platform": "macOS-26.3-arm64-arm-64bit",
+    "pytest": "8.3.3",
+    "model": "RandomForestClassifier (scikit-learn) {'max_depth': 10, 'min_samples_leaf': 2, 'n_estimators': 150} (trained 2026-08-20)",
+    "model_holdout_accuracy": 0.98
+  },
+  "summary": {
+    "total": 15,
+    "Passed": 15,
+    "Failed": 0,
+    "Blocked": 0,
+    "Not executed": 0
+  },
+  "modules": [
+    {
+      "module": "Quality Prediction",
+      "total": 15,
+      "Passed": 15,
+      "Failed": 0,
+      "Blocked": 0,
+      "Not executed": 0
+    }
+  ],
+  "cases": [
+    {
+      "id": "QP-01",
+      "module": "Quality Prediction",
+      "title": "Gherkin Given/When/Then structure detection",
+      "objective": "Verify that Given (precondition), When (test step) and Then (expected result) are detected from Gherkin text, including Background as a precondition.",
+      "expected": "Complete scenario -> all three flags = 1; scenario with only a When step -> preconditions 0, steps 1, expected result 0; a Background block counts as a precondition.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_gherkin_structure_detection",
+      "status": "Passed",
+      "duration_ms": 0.71,
+      "failure": null,
+      "actual": "Complete: Given=1 When=1 Then=1\nWhen-only: Given=0 When=1 Then=0\nBackground block: has_preconditions=1",
+      "evidence": [
+        {
+          "label": "Input (complete)",
+          "value": "Feature: User Login\n  Scenario: Successful login with valid credentials\n    Given a registered user \"alice@example.com\" exists with password \"Secret123\"\n    When the user enters email \"alice@example.com\" and password \"Secret123\" and clicks \"Login\"\n    Then the system returns status code 200 and redirects to the \"Dashboard\" page\n  Scenario: Login rejected with wrong password\n    Given a registered user \"alice@example.com\" exists with password \"Secret123\"\n    When the user enters email \"alice@example.com\" and password \"Wrong999\" and clicks \"Login\"\n    Then the system displays the error \"Invalid email or password\"\n"
+        },
+        {
+          "label": "Input (When-only)",
+          "value": "Feature: Login\n  Scenario: login works\n    When some action is performed properly on the login\n"
+        }
+      ]
+    },
+    {
+      "id": "QP-02",
+      "module": "Quality Prediction",
+      "title": "Completeness score calculation",
+      "objective": "Verify completeness = 25 x (Given + When + Then present) + 25 x min(scenarios, 3)/3.",
+      "expected": "Two-scenario complete feature -> 75 + 16.7 = 91.7; one-scenario When-only feature -> 25 + 8.3 = 33.3.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_completeness_score",
+      "status": "Passed",
+      "duration_ms": 0.43,
+      "failure": null,
+      "actual": "Complete two-scenario feature: 91.7; When-only feature: 33.3",
+      "evidence": []
+    },
+    {
+      "id": "QP-03",
+      "module": "Quality Prediction",
+      "title": "Requirement-coverage metric against acceptance criteria",
+      "objective": "Verify requirement_coverage measures how much of the linked acceptance-criteria vocabulary appears in the test, and is 0 when no criteria are linked.",
+      "expected": "Login test vs login ACs -> high coverage (>60); same test with no ACs -> 0; unrelated checkout test vs login ACs -> low (<40).",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_requirement_coverage",
+      "status": "Passed",
+      "duration_ms": 0.45,
+      "failure": null,
+      "actual": "Login test vs login ACs: 78.9; no ACs: 0.0; checkout test vs login ACs: 31.6",
+      "evidence": [
+        {
+          "label": "Acceptance criteria",
+          "value": "[\n  \"The user can login with a valid email and password\",\n  \"If the password is wrong, the system displays an invalid email or password error\"\n]"
+        }
+      ]
+    },
+    {
+      "id": "QP-04",
+      "module": "Quality Prediction",
+      "title": "Specificity score (concrete values in steps)",
+      "objective": "Verify specificity = % of Given/When/Then/And/But steps containing a quoted literal or a number.",
+      "expected": "All steps of the login test use quoted values -> 100; vague step -> 0; 1 of 2 steps specific -> 50.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_specificity_score",
+      "status": "Passed",
+      "duration_ms": 0.33,
+      "failure": null,
+      "actual": "Specific test: 100.0; vague test: 0.0; half-specific test: 50.0",
+      "evidence": []
+    },
+    {
+      "id": "QP-05",
+      "module": "Quality Prediction",
+      "title": "Ambiguity score (vague wording)",
+      "objective": "Verify ambiguity counts vague words (e.g. some, properly, appropriate) per 100 words, scaled and capped at 100.",
+      "expected": "Precise login test -> 0; 'When some action is performed properly' -> 100 (capped).",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_ambiguity_score",
+      "status": "Passed",
+      "duration_ms": 0.30000000000000004,
+      "failure": null,
+      "actual": "Precise test ambiguity: 0.0; vague test ambiguity: 100.0",
+      "evidence": []
+    },
+    {
+      "id": "QP-06",
+      "module": "Quality Prediction",
+      "title": "Weighted quality-score formula",
+      "objective": "Verify the 0-100 quality score equals the documented weighted formula and that the weights sum to 1.",
+      "expected": "score = 0.20*completeness + 0.20*coverage + 0.15*specificity + 15*Then + 10*Given + 10*When + 0.10*(100-ambiguity); weights sum to 1.0.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_weighted_formula",
+      "status": "Passed",
+      "duration_ms": 0.34,
+      "failure": null,
+      "actual": "Manual formula = 94.12; compute_quality_score = 94.12; sum of weights = 1.00",
+      "evidence": [
+        {
+          "label": "Weights",
+          "value": "{\n  \"completeness_score\": 0.2,\n  \"requirement_coverage\": 0.2,\n  \"specificity_score\": 0.15,\n  \"has_expected_result\": 0.15,\n  \"has_preconditions\": 0.1,\n  \"has_test_steps\": 0.1,\n  \"low_ambiguity\": 0.1\n}"
+        }
+      ]
+    },
+    {
+      "id": "QP-07",
+      "module": "Quality Prediction",
+      "title": "High / Medium / Low classification thresholds",
+      "objective": "Verify score-to-label bands: High >= 80, Medium 60-79.99, Low < 60.",
+      "expected": "100->High, 80->High, 79.99->Medium, 60->Medium, 59.99->Low, 0->Low.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_label_thresholds",
+      "status": "Passed",
+      "duration_ms": 0.22,
+      "failure": null,
+      "actual": "100->High, 80->High, 79.99->Medium, 60->Medium, 59.99->Low, 0->Low",
+      "evidence": []
+    },
+    {
+      "id": "QP-08",
+      "module": "Quality Prediction",
+      "title": "Well-designed test case classified High",
+      "objective": "Verify the full pipeline (feature extraction -> formula -> Random Forest) rates a complete, specific, requirement-linked test case as High.",
+      "expected": "Formula label High, Random Forest label High, method = random_forest.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_prediction_high",
+      "status": "Passed",
+      "duration_ms": 1572.67,
+      "failure": null,
+      "actual": "Score 94.12 (High); RF High P(High)=0.902; method=random_forest",
+      "evidence": [
+        {
+          "label": "Extracted features",
+          "value": "{\n  \"test_case\": \"t\",\n  \"description_length\": 619,\n  \"has_expected_result\": 1,\n  \"has_preconditions\": 1,\n  \"has_test_steps\": 1,\n  \"requirement_linked\": 1,\n  \"requirement_coverage\": 78.9,\n  \"ambiguity_score\": 0.0,\n  \"completeness_score\": 91.7,\n  \"specificity_score\": 100.0,\n  \"test_result\": 1.0\n}"
+        }
+      ]
+    },
+    {
+      "id": "QP-09",
+      "module": "Quality Prediction",
+      "title": "Deficient test case classified Low",
+      "objective": "Verify a vague, incomplete test case with no linked requirement is rated Low by both the formula and the model.",
+      "expected": "Formula label Low, Random Forest label Low.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_prediction_low",
+      "status": "Passed",
+      "duration_ms": 3.3299999999999996,
+      "failure": null,
+      "actual": "Score 16.66 (Low); RF Low P(Low)=1.000",
+      "evidence": [
+        {
+          "label": "Extracted features",
+          "value": "{\n  \"test_case\": \"t\",\n  \"description_length\": 95,\n  \"has_expected_result\": 0,\n  \"has_preconditions\": 0,\n  \"has_test_steps\": 1,\n  \"requirement_linked\": 0,\n  \"requirement_coverage\": 0.0,\n  \"ambiguity_score\": 100.0,\n  \"completeness_score\": 33.3,\n  \"specificity_score\": 0.0,\n  \"test_result\": 0.5\n}"
+        }
+      ]
+    },
+    {
+      "id": "QP-10",
+      "module": "Quality Prediction",
+      "title": "PASS/FAIL is not part of the quality-label formula",
+      "objective": "Verify execution outcome (test_result) has no effect on the quality score / label that defines the training labels.",
+      "expected": "Score and formula label identical for test_result = 0 (failed), 0.5 (pending), 1 (passed); test_result is not a formula weight.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_pass_fail_not_in_formula",
+      "status": "Passed",
+      "duration_ms": 0.33,
+      "failure": null,
+      "actual": "Scores by test_result: {0.0: 94.12, 0.5: 94.12, 1.0: 94.12}; weight keys: ['completeness_score', 'has_expected_result', 'has_preconditions', 'has_test_steps', 'low_ambiguity', 'requirement_coverage', 'specificity_score']",
+      "evidence": []
+    },
+    {
+      "id": "QP-11",
+      "module": "Quality Prediction",
+      "title": "Training labels derive from the formula, not from PASS/FAIL",
+      "objective": "Verify every row of the training dataset is labelled by the weighted formula over its own features, and that test_result is only weakly correlated with the label.",
+      "expected": "100% of rows: quality_label == formula label; |corr(test_result, label)| < 0.2.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_dataset_labels_from_formula",
+      "status": "Passed",
+      "duration_ms": 35.230000000000004,
+      "failure": null,
+      "actual": "Rows: 1000; formula-label agreement: 100.0%; corr(test_result, label) = 0.086",
+      "evidence": [
+        {
+          "label": "Label distribution",
+          "value": "{\n  \"Low\": 467,\n  \"High\": 331,\n  \"Medium\": 202\n}"
+        }
+      ]
+    },
+    {
+      "id": "QP-12",
+      "module": "Quality Prediction",
+      "title": "Model prediction is robust to PASS/FAIL changes",
+      "objective": "Verify the trained Random Forest does not use execution outcome as a shortcut: flipping only test_result should almost never change its prediction.",
+      "expected": "Predicted label unchanged when test_result is flipped (0<->1) for >= 95% of dataset rows.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_model_insensitive_to_pass_fail",
+      "status": "Passed",
+      "duration_ms": 27.589999999999996,
+      "failure": null,
+      "actual": "Prediction unchanged for 99.8% of 1000 rows after flipping test_result",
+      "evidence": []
+    },
+    {
+      "id": "QP-13",
+      "module": "Quality Prediction",
+      "title": "Reported held-out accuracy is reproducible",
+      "objective": "Re-create the stratified 80/20 split (random_state=42) used in training and re-evaluate the saved model, confirming the accuracy shown in the UI is genuine.",
+      "expected": "Re-computed held-out accuracy equals the stored metadata accuracy and is >= 0.85 (proposal target).",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_holdout_accuracy_reproducible",
+      "status": "Passed",
+      "duration_ms": 16.71,
+      "failure": null,
+      "actual": "Re-computed accuracy 0.9800 on 200 held-out rows; stored metadata accuracy 0.9800",
+      "evidence": []
+    },
+    {
+      "id": "QP-14",
+      "module": "Quality Prediction",
+      "title": "Formula fallback when no trained model is present",
+      "objective": "Verify the service still scores test cases (method = weighted_formula) if the model file is unavailable.",
+      "expected": "predicted_label == formula_label, empty probabilities, method = weighted_formula.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_formula_fallback",
+      "status": "Passed",
+      "duration_ms": 0.38000000000000006,
+      "failure": null,
+      "actual": "method=weighted_formula; predicted=High; formula=High; probabilities={}",
+      "evidence": []
+    },
+    {
+      "id": "QP-15",
+      "module": "Quality Prediction",
+      "title": "Empty / non-Gherkin description handled safely",
+      "objective": "Verify a test case with an empty or free-text description does not crash feature extraction and is rated Low.",
+      "expected": "No exception; all structure flags 0; label Low.",
+      "level": "unit",
+      "nodeid": "tests/test_quality_prediction.py::test_empty_description",
+      "status": "Passed",
+      "duration_ms": 5.92,
+      "failure": null,
+      "actual": "(Given, When, Then, label): {'empty': (0, 0, 0, 'Low'), 'free text': (0, 0, 0, 'Low')}",
+      "evidence": []
+    }
+  ]
+}

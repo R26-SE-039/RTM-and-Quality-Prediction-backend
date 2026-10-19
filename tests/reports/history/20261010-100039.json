@@ -1,0 +1,238 @@
+{
+  "generated_at": "2026-10-10T04:30:39.718833+00:00",
+  "duration_s": 2.69,
+  "suite": "full (offline + live integration)",
+  "command": "pytest tests/test_coverage_gaps.py -q -p no:cacheprovider -W ignore::DeprecationWarning",
+  "environment": {
+    "python": "3.11.15",
+    "platform": "macOS-26.3-arm64-arm-64bit",
+    "pytest": "8.3.3",
+    "model": "RandomForestClassifier (scikit-learn) {'max_depth': 10, 'min_samples_leaf': 2, 'n_estimators': 150} (trained 2026-08-20)",
+    "model_holdout_accuracy": 0.98
+  },
+  "summary": {
+    "total": 14,
+    "Passed": 14,
+    "Failed": 0,
+    "Blocked": 0,
+    "Not executed": 0
+  },
+  "modules": [
+    {
+      "module": "Coverage Gap Detection",
+      "total": 14,
+      "Passed": 14,
+      "Failed": 0,
+      "Blocked": 0,
+      "Not executed": 0
+    }
+  ],
+  "cases": [
+    {
+      "id": "GAP-01",
+      "module": "Coverage Gap Detection",
+      "title": "Acceptance-criterion coverage threshold (40% word overlap)",
+      "objective": "Verify an AC counts as covered only when >= 40% of its words (3+ letters) appear in at least one linked test.",
+      "expected": "AC with 2 of 5 words present (40%) -> covered; AC with 1 of 5 words (20%) -> missing.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_ac_threshold",
+      "status": "Passed",
+      "duration_ms": 0.38,
+      "failure": null,
+      "actual": "2/5 words -> covered=True; 1/5 words -> covered=False",
+      "evidence": []
+    },
+    {
+      "id": "GAP-02",
+      "module": "Coverage Gap Detection",
+      "title": "Uncovered acceptance criterion identified",
+      "objective": "Verify the Coverage Gaps API lists a requirement whose tests miss one acceptance criterion and names that criterion.",
+      "expected": "Gap listed; missing_acceptance_criteria = [lockout AC]; covered 2/3; current_coverage_pct 66.7; action 'Generate 1 additional test case'.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_uncovered_ac",
+      "status": "Passed",
+      "duration_ms": 2379.9,
+      "failure": null,
+      "actual": "missing=['The account is locked after five failed login attempts']; covered 2/3; coverage 66.7%; risk 36.0 (Low); action: Generate 1 additional test case for this requirement.",
+      "evidence": [
+        {
+          "label": "Risk factors",
+          "value": "{\n  \"business_priority\": 70.0,\n  \"coverage_gap\": 26.7,\n  \"acceptance_criteria_gap\": 33.3,\n  \"test_failure_rate\": 0.0,\n  \"code_coverage_gap\": 50.0\n}"
+        }
+      ]
+    },
+    {
+      "id": "GAP-03",
+      "module": "Coverage Gap Detection",
+      "title": "Requirement with no linked test cases",
+      "objective": "Verify an untested Must requirement is reported as a Critical gap with the maximum coverage-gap factor.",
+      "expected": "business_priority 100, coverage_gap 100, AC gap 100; risk >= 70 -> Critical; action 'Generate 2 additional test cases'.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_no_tests_gap",
+      "status": "Passed",
+      "duration_ms": 5.77,
+      "failure": null,
+      "actual": "factors={'business_priority': 100.0, 'coverage_gap': 100.0, 'acceptance_criteria_gap': 100.0, 'test_failure_rate': 50.0, 'code_coverage_gap': 50.0}; risk 80.0 (Critical); action: Generate 2 additional test cases for this requirement.",
+      "evidence": []
+    },
+    {
+      "id": "GAP-04",
+      "module": "Coverage Gap Detection",
+      "title": "Healthy requirement is not reported as a gap",
+      "objective": "Verify a requirement that is fully covered, passing, and covered by a high-quality test does not appear in the gap list.",
+      "expected": "R1 absent from the Coverage Gaps response.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_healthy_not_gap",
+      "status": "Passed",
+      "duration_ms": 7.8100000000000005,
+      "failure": null,
+      "actual": "Gap list requirement ids: none",
+      "evidence": []
+    },
+    {
+      "id": "GAP-05",
+      "module": "Coverage Gap Detection",
+      "title": "AC coverage is independent of test execution results",
+      "objective": "Verify a failing test still counts as textually covering its ACs in the RTM, while the gap analysis separately flags it through the test-failure factor.",
+      "expected": "RTM row: FULLY COVERED, failed_tests 1. Gap: listed, test_failure_rate 100, AC gap 0, action 'Review and fix the failing linked test case(s)'.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_ac_coverage_vs_execution",
+      "status": "Passed",
+      "duration_ms": 10.44,
+      "failure": null,
+      "actual": "RTM: FULLY COVERED, coverage 100.0%, failed 1. Gap factors: AC gap 0.0, failure rate 100.0; action: Review and fix the failing linked test case(s) \u2014 acceptance criteria are textually covered but not passing.",
+      "evidence": []
+    },
+    {
+      "id": "GAP-06",
+      "module": "Coverage Gap Detection",
+      "title": "Code coverage is a separate, project-level risk factor",
+      "objective": "Verify GitHub code coverage only feeds the code_coverage_gap factor (100 - overall%) and never changes requirement AC coverage.",
+      "expected": "No coverage report -> factor 50 (neutral); DONE report with overall 80% -> factor 20; RTM coverage_pct unchanged (66.7) in both cases.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_code_coverage_separate",
+      "status": "Passed",
+      "duration_ms": 16.77,
+      "failure": null,
+      "actual": "code_coverage_gap: 50.0 -> 20.0; RTM coverage_pct: 66.7 -> 66.7",
+      "evidence": []
+    },
+    {
+      "id": "GAP-07",
+      "module": "Coverage Gap Detection",
+      "title": "Risk score and risk-level boundaries",
+      "objective": "Verify risk = mean of the five factors, with Critical >= 70, Medium 40-69.9, Low < 40.",
+      "expected": "Each scenario's risk_score equals the factor mean; levels follow the 70 / 40 boundaries.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_risk_formula_and_levels",
+      "status": "Passed",
+      "duration_ms": 0.28,
+      "failure": null,
+      "actual": "(risk, factor mean, level): {'untested Must': (77.5, 77.5, 'Critical'), 'partial Should': (33.5, 33.5, 'Low'), 'covered Could': (15.0, 15.0, 'Low')}",
+      "evidence": []
+    },
+    {
+      "id": "GAP-08",
+      "module": "Coverage Gap Detection",
+      "title": "Failure-rate fallback when nothing has been executed",
+      "objective": "Verify the test-failure factor uses 100 - average predicted quality when no linked test has run, and 50 when no prediction is available.",
+      "expected": "Unexecuted tests with avg quality 30 -> factor 70; no tests and no quality -> factor 50.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_failure_rate_fallback",
+      "status": "Passed",
+      "duration_ms": 0.26,
+      "failure": null,
+      "actual": "pending + quality 30 -> 70.0; no data -> 50.0",
+      "evidence": []
+    },
+    {
+      "id": "GAP-09",
+      "module": "Coverage Gap Detection",
+      "title": "Covered but never executed",
+      "objective": "Verify a requirement whose ACs are covered by a high-quality but unexecuted test is still flagged, with an 'execute' recommendation.",
+      "expected": "Gap listed with action 'Execute the linked test case(s) ...'.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_unverified_tests",
+      "status": "Passed",
+      "duration_ms": 6.99,
+      "failure": null,
+      "actual": "Listed: True; action: Execute the linked test case(s) \u2014 acceptance criteria are covered on paper but not yet verified.",
+      "evidence": []
+    },
+    {
+      "id": "GAP-10",
+      "module": "Coverage Gap Detection",
+      "title": "Low-quality covering test flagged as a gap",
+      "objective": "Verify textual AC coverage is not enough when the covering test's predicted quality is below 70.",
+      "expected": "Requirement with only a vague test listed; recommendation refers to improving low-quality tests or generating tests.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_low_quality_gap",
+      "status": "Passed",
+      "duration_ms": 7.21,
+      "failure": null,
+      "actual": "Listed: True; coverage 100.0%; action: Acceptance criteria are covered, but linked test cases score low on predicted quality \u2014 review and improve them (see the Quality Prediction / Test Improvement pages).",
+      "evidence": []
+    },
+    {
+      "id": "GAP-11",
+      "module": "Coverage Gap Detection",
+      "title": "Gaps sorted by risk (highest first)",
+      "objective": "Verify the Coverage Gaps API returns gaps in descending order of risk score.",
+      "expected": "risk_score sequence is non-increasing; untested Must requirement first.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_sorted_by_risk",
+      "status": "Passed",
+      "duration_ms": 10.270000000000001,
+      "failure": null,
+      "actual": "Order: [('R2', 80.0), ('R3', 48.0), ('R1', 30.0)]",
+      "evidence": []
+    },
+    {
+      "id": "GAP-12",
+      "module": "Coverage Gap Detection",
+      "title": "Test generation for an uncovered AC is grounded and idempotent",
+      "objective": "Verify the generated Gherkin uses the criterion's own wording and the story persona, is scored by the model, and repeated requests reuse the same row.",
+      "expected": "Text contains Given/When/Then, the AC wording and persona 'registered user'; requirement_coverage 100; same id on second call.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_generate_gap_test",
+      "status": "Passed",
+      "duration_ms": 16.67,
+      "failure": null,
+      "actual": "ids 1 / 1; coverage 100.0; score 84.66 (High), RF Medium",
+      "evidence": [
+        {
+          "label": "Generated Gherkin",
+          "value": "Feature: User Login\n\n  Scenario: The account is locked after five failed login attempts\n    Given a registered user is on the \"User Login\" page\n    And the system meets the requirement: The system shall lock accounts after repeated failures\n    When the account is locked after five failed login attempts\n    Then the account is locked after five failed login attempts\n    And no unrelated errors should occur\n"
+        }
+      ]
+    },
+    {
+      "id": "GAP-13",
+      "module": "Coverage Gap Detection",
+      "title": "Add generated test: validation of target and id",
+      "objective": "Verify adding a generated test accepts only 'inventory' or 'rtm' and rejects unknown ids.",
+      "expected": "target=rtm -> 200 with added_to_rtm true; target=bogus -> 400; unknown id -> 404.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_add_generated_validation",
+      "status": "Passed",
+      "duration_ms": 18.23,
+      "failure": null,
+      "actual": "rtm -> 200 added_to_rtm=True; bogus -> 400; unknown -> 404",
+      "evidence": []
+    },
+    {
+      "id": "GAP-14",
+      "module": "Coverage Gap Detection",
+      "title": "Bulk generation for critical gaps",
+      "objective": "Verify generate-all creates one test per (requirement, missing AC) pair in a single request.",
+      "expected": "2 items -> 2 generated tests with distinct ids, each scored.",
+      "level": "unit",
+      "nodeid": "tests/test_coverage_gaps.py::test_generate_all",
+      "status": "Passed",
+      "duration_ms": 14.159999999999998,
+      "failure": null,
+      "actual": "HTTP 200; generated 2; ids [1, 2]; labels ['Medium', 'Medium']",
+      "evidence": []
+    }
+  ]
+}

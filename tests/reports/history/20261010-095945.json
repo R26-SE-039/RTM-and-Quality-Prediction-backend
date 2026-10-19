@@ -1,0 +1,219 @@
+{
+  "generated_at": "2026-10-10T04:29:45.652238+00:00",
+  "duration_s": 2.63,
+  "suite": "full (offline + live integration)",
+  "command": "pytest tests/test_rtm_matrix.py -q -p no:cacheprovider",
+  "environment": {
+    "python": "3.11.15",
+    "platform": "macOS-26.3-arm64-arm-64bit",
+    "pytest": "8.3.3",
+    "model": "RandomForestClassifier (scikit-learn) {'max_depth': 10, 'min_samples_leaf': 2, 'n_estimators': 150} (trained 2026-08-20)",
+    "model_holdout_accuracy": 0.98
+  },
+  "summary": {
+    "total": 12,
+    "Passed": 12,
+    "Failed": 0,
+    "Blocked": 0,
+    "Not executed": 0
+  },
+  "modules": [
+    {
+      "module": "RTM Generation",
+      "total": 12,
+      "Passed": 12,
+      "Failed": 0,
+      "Blocked": 0,
+      "Not executed": 0
+    }
+  ],
+  "cases": [
+    {
+      "id": "RTM-01",
+      "module": "RTM Generation",
+      "title": "Component 1 requirement and user-story fields shown in the RTM",
+      "objective": "Verify every requirement / user-story field received from Component 1 is carried into the matching RTM row unchanged.",
+      "expected": "Row fields (requirement id/text/type/status, meeting, story id/title/text, priority, ACs) equal the Component 1 item.",
+      "level": "unit",
+      "nodeid": "tests/test_rtm_matrix.py::test_c1_fields_mapped",
+      "status": "Passed",
+      "duration_ms": 702.38,
+      "failure": null,
+      "actual": "11 fields compared; mismatched: none",
+      "evidence": [
+        {
+          "label": "Component 1 item",
+          "value": "{\n  \"requirement_id\": \"R1\",\n  \"requirement_text\": \"Users shall log in\",\n  \"requirement_type\": \"Functional\",\n  \"requirement_status\": \"approved\",\n  \"meeting_title\": \"Sprint planning\",\n  \"user_story_id\": \"S1\",\n  \"user_story_title\": \"User Login\",\n  \"user_story_text\": \"As a registered user, I want to log in so that I can use the system\",\n  \"priority\": \"Must\",\n  \"user_story_status\": \"approved\",\n  \"acceptance_criteria\": [\n    \"The user can login with a valid email and password\",\n    \"If the password is wrong, the system displays an invalid email or password error\"\n  ]\n}"
+        },
+        {
+          "label": "RTM row (fields)",
+          "value": "{\n  \"requirement_id\": \"R1\",\n  \"requirement_text\": \"Users shall log in\",\n  \"requirement_type\": \"Functional\",\n  \"requirement_status\": \"approved\",\n  \"meeting_title\": \"Sprint planning\",\n  \"user_story_id\": \"S1\",\n  \"user_story_title\": \"User Login\",\n  \"user_story_text\": \"As a registered user, I want to log in so that I can use the system\",\n  \"priority\": \"Must\",\n  \"user_story_status\": \"approved\",\n  \"acceptance_criteria\": [\n    \"The user can login with a valid email and password\",\n    \"If the password is wrong, the system displays an invalid email or password error\"\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "id": "RTM-02",
+      "module": "RTM Generation",
+      "title": "Component 2 test cases linked to the correct requirement",
+      "objective": "Verify each Component 2 test case is attached only to the requirement whose user_story_id equals the test's story_id.",
+      "expected": "R1 (story S1) gets T1 and T2; R2 (story S2) gets only T3; no test appears under the wrong requirement.",
+      "level": "unit",
+      "nodeid": "tests/test_rtm_matrix.py::test_c2_tests_linked_by_story",
+      "status": "Passed",
+      "duration_ms": 5.19,
+      "failure": null,
+      "actual": "Links: {'R1': ['T1', 'T2'], 'R2': ['T3']}",
+      "evidence": []
+    },
+    {
+      "id": "RTM-03",
+      "module": "RTM Generation",
+      "title": "Unmatched test case (story not in Component 1)",
+      "objective": "Verify a Component 2 test case whose story_id does not exist in the Component 1 iteration is not linked to any requirement and is not counted.",
+      "expected": "Orphan test absent from all rows; summary total_tests counts only linked tests.",
+      "level": "unit",
+      "nodeid": "tests/test_rtm_matrix.py::test_unmatched_test_case",
+      "status": "Passed",
+      "duration_ms": 4.45,
+      "failure": null,
+      "actual": "Linked tests: ['T1']; summary.total_tests = 1",
+      "evidence": []
+    },
+    {
+      "id": "RTM-04",
+      "module": "RTM Generation",
+      "title": "Requirement with no linked test case",
+      "objective": "Verify a requirement with no Component 2 test case is reported as NOT COVERED.",
+      "expected": "coverage_status = NOT COVERED, total_tests = 0, coverage_pct = 0, every AC listed as missing.",
+      "level": "unit",
+      "nodeid": "tests/test_rtm_matrix.py::test_requirement_without_tests",
+      "status": "Passed",
+      "duration_ms": 4.35,
+      "failure": null,
+      "actual": "status=NOT COVERED; tests=0; coverage=0.0; missing=2",
+      "evidence": []
+    },
+    {
+      "id": "RTM-05",
+      "module": "RTM Generation",
+      "title": "Partially covered requirement",
+      "objective": "Verify a requirement whose tests cover only some acceptance criteria is PARTIAL and lists the uncovered criteria.",
+      "expected": "2 of 3 ACs covered -> PARTIAL, coverage 66.7%, missing = the account-lockout criterion.",
+      "level": "unit",
+      "nodeid": "tests/test_rtm_matrix.py::test_partial_coverage",
+      "status": "Passed",
+      "duration_ms": 4.34,
+      "failure": null,
+      "actual": "status=PARTIAL; covered 2/3 (66.7%); missing=['The account is locked after five failed login attempts']",
+      "evidence": []
+    },
+    {
+      "id": "RTM-06",
+      "module": "RTM Generation",
+      "title": "Fully covered requirement",
+      "objective": "Verify a requirement whose linked tests cover every acceptance criterion is FULLY COVERED.",
+      "expected": "coverage_status = FULLY COVERED, coverage_pct = 100, no missing ACs.",
+      "level": "unit",
+      "nodeid": "tests/test_rtm_matrix.py::test_full_coverage",
+      "status": "Passed",
+      "duration_ms": 4.18,
+      "failure": null,
+      "actual": "status=FULLY COVERED; coverage=100.0; missing=[]",
+      "evidence": []
+    },
+    {
+      "id": "RTM-07",
+      "module": "RTM Generation",
+      "title": "Requirement with no acceptance criteria (incomplete traceability data)",
+      "objective": "Document how the RTM treats a requirement that arrives from Component 1 with an empty acceptance-criteria list.",
+      "expected": "Implemented behaviour: with >=1 linked test the row is FULLY COVERED at 100% (nothing to miss); with no test it is NOT COVERED.",
+      "level": "unit",
+      "nodeid": "tests/test_rtm_matrix.py::test_requirement_without_acs",
+      "status": "Passed",
+      "duration_ms": 3.83,
+      "failure": null,
+      "actual": "(status, coverage%, #ACs): {'R1': ('FULLY COVERED', 100.0, 0), 'R2': ('NOT COVERED', 100.0, 0)}",
+      "evidence": [
+        {
+          "label": "Note",
+          "value": "A requirement with no acceptance criteria cannot be checked at AC level, so any linked test makes it 'fully covered'. Reviewers should treat such rows as a data-quality issue in Component 1."
+        }
+      ]
+    },
+    {
+      "id": "RTM-08",
+      "module": "RTM Generation",
+      "title": "RTM summary aggregates",
+      "objective": "Verify the matrix summary counts requirements by status, tests by result, pass rate over executed tests, and average coverage.",
+      "expected": "3 requirements (1 full, 1 partial, 1 not covered); 3 tests: 1 passed, 1 failed, 1 pending; pass rate 50%; defects 1; avg coverage = mean of row coverage.",
+      "level": "unit",
+      "nodeid": "tests/test_rtm_matrix.py::test_summary_aggregates",
+      "status": "Passed",
+      "duration_ms": 4.62,
+      "failure": null,
+      "actual": "Summary: {'total_requirements': 3, 'fully_covered': 1, 'partially_covered': 1, 'not_covered': 1, 'total_tests': 3, 'passed_tests': 1, 'failed_tests': 1, 'pending_tests': 1, 'pass_rate': 50.0, 'defects': 1, 'avg_coverage_pct': 55.6}",
+      "evidence": []
+    },
+    {
+      "id": "RTM-09",
+      "module": "RTM Generation",
+      "title": "Execution status derived from Component 2 results",
+      "objective": "Verify Component 2's traceability payload is mapped to test status using only ACTIVE suites and only the LATEST execution, matching scenario titles by word overlap.",
+      "expected": "Gherkin A: latest run of active suite passed -> approved (older failure ignored); Gherkin B: failed in latest run -> rejected; Gherkin C: only in an inactive suite -> pending; Gherkin D: no matching result -> pending.",
+      "level": "unit",
+      "nodeid": "tests/test_rtm_matrix.py::test_status_mapping_from_c2",
+      "status": "Passed",
+      "duration_ms": 0.6,
+      "failure": null,
+      "actual": "Statuses: {'A': 'approved', 'B': 'rejected', 'C': 'pending', 'D': 'pending'}; request: /projects/P1/traceability {'light': 'true', 'iteration_id': 'IT1'}",
+      "evidence": [
+        {
+          "label": "Component 2 payload (abridged)",
+          "value": "[\n  {\n    \"id\": \"SU1\",\n    \"is_active\": true,\n    \"source_scenario_ids\": [\n      \"A\",\n      \"B\",\n      \"D\"\n    ]\n  },\n  {\n    \"id\": \"SU0\",\n    \"is_active\": false,\n    \"source_scenario_ids\": [\n      \"C\"\n    ]\n  }\n]"
+        }
+      ]
+    },
+    {
+      "id": "RTM-10",
+      "module": "RTM Generation",
+      "title": "Generated gap test cases merged into the RTM",
+      "objective": "Verify a gap test case added to the RTM appears in its requirement row with source = generated and contributes to coverage.",
+      "expected": "Row contains the generated test (id gap-<n>, source generated); lockout AC becomes covered.",
+      "level": "unit",
+      "nodeid": "tests/test_rtm_matrix.py::test_generated_tests_merged",
+      "status": "Passed",
+      "duration_ms": 1648.03,
+      "failure": null,
+      "actual": "Before: PARTIAL 66.7% tests=['T1']; After: FULLY COVERED 100.0% tests=[('T1', 'C2'), ('gap-1', 'generated')]",
+      "evidence": []
+    },
+    {
+      "id": "RTM-11",
+      "module": "RTM Generation",
+      "title": "Requirement detail lookup",
+      "objective": "Verify the requirement-detail endpoint returns the matching row and 404 for an unknown requirement.",
+      "expected": "Known id -> 200 with that requirement; unknown id -> 404 'Requirement not found in this iteration'.",
+      "level": "unit",
+      "nodeid": "tests/test_rtm_matrix.py::test_requirement_detail",
+      "status": "Passed",
+      "duration_ms": 5.62,
+      "failure": null,
+      "actual": "R1 -> 200 (R1); NOPE -> 404 {'detail': 'Requirement not found in this iteration'}",
+      "evidence": []
+    },
+    {
+      "id": "RTM-12",
+      "module": "RTM Generation",
+      "title": "Two requirements sharing one user story",
+      "objective": "Document the implemented behaviour when Component 1 links two requirements to the same user story.",
+      "expected": "Both requirement rows list the story's test cases (traceability is via the shared story).",
+      "level": "unit",
+      "nodeid": "tests/test_rtm_matrix.py::test_shared_story",
+      "status": "Passed",
+      "duration_ms": 4.02,
+      "failure": null,
+      "actual": "Rows: {'R1': (['T1'], 'FULLY COVERED'), 'R2': (['T1'], 'PARTIAL')}",
+      "evidence": []
+    }
+  ]
+}

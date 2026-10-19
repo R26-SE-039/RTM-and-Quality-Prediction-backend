@@ -1,0 +1,173 @@
+{
+  "generated_at": "2026-10-10T04:35:06.217400+00:00",
+  "duration_s": 108.5,
+  "suite": "full (offline + live integration)",
+  "command": "pytest tests/test_live_integration.py -q -p no:cacheprovider -W ignore::DeprecationWarning -rs",
+  "environment": {
+    "python": "3.11.15",
+    "platform": "macOS-26.3-arm64-arm-64bit",
+    "pytest": "8.3.3",
+    "model": "RandomForestClassifier (scikit-learn) {'max_depth': 10, 'min_samples_leaf': 2, 'n_estimators': 150} (trained 2026-08-20)",
+    "model_holdout_accuracy": 0.98
+  },
+  "summary": {
+    "total": 9,
+    "Passed": 8,
+    "Failed": 1,
+    "Blocked": 0,
+    "Not executed": 0
+  },
+  "modules": [
+    {
+      "module": "Live Integration",
+      "total": 9,
+      "Passed": 8,
+      "Failed": 1,
+      "Blocked": 0,
+      "Not executed": 0
+    }
+  ],
+  "cases": [
+    {
+      "id": "LIVE-01",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "RTM service running with its database",
+      "objective": "Verify the deployed RTM backend answers its readiness probe.",
+      "expected": "GET http://localhost:8003/api/health -> 200 {status: ok, database: up}.",
+      "nodeid": "tests/test_live_integration.py::test_live_rtm_health",
+      "status": "Passed",
+      "duration_ms": 5109.9,
+      "failure": null,
+      "actual": "HTTP 200 {\"status\":\"ok\",\"database\":\"up\"}",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-02",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "API gateway routes RTM requests",
+      "objective": "Verify the path the browser uses (gateway /api/rtm prefix) reaches the RTM backend.",
+      "expected": "GET http://localhost:8081/api/rtm/api/health -> 200 with database up.",
+      "nodeid": "tests/test_live_integration.py::test_live_gateway",
+      "status": "Passed",
+      "duration_ms": 431.91,
+      "failure": null,
+      "actual": "HTTP 200 {\"status\":\"ok\",\"database\":\"up\"}",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-03",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Component 1 requirements-with-stories contract",
+      "objective": "Verify Component 1 serves the endpoint and fields the RTM depends on, for a real iteration.",
+      "expected": "HTTP 200 with items[]; every item has requirement_id, requirement_text, user_story_id, priority, acceptance_criteria.",
+      "nodeid": "tests/test_live_integration.py::test_live_c1_contract",
+      "status": "Passed",
+      "duration_ms": 41332.840000000004,
+      "failure": null,
+      "actual": "HTTP 200; iteration adef3a45-6802-4a9d-8d0e-46375d7efbec; 8 items; items missing fields: none",
+      "evidence": [
+        {
+          "label": "Sample item",
+          "value": "{\n  \"requirement_id\": \"cc1dcc58-46e6-40c8-945e-69808eb16450\",\n  \"requirement_text\": \"The system must run on Windows Server.\",\n  \"requirement_type\": \"constraint\",\n  \"requirement_status\": \"active\",\n  \"requirement_created_at\": \"2026-08-16T01:48:22.198379\",\n  \"meeting_id\": \"d377bab6-bde5-4b2f-a6da-c76aabbe5654\",\n  \"meeting_title\": \"test meeting\",\n  \"user_story_id\": \"d9f45d97-da33-4dee-b0c3-cf2fa540e716\",\n  \"user_story_title\": \"Windows Server Environment Deployment\",\n  \"user_story_text\": \"As a System Administrator, I want the system to be compatible with Windows Server so that it can be deployed within our standard corporate infrastructure.\",\n  \"priority\": \"Must\",\n  \"user_story_status\": \"ready\",\n  \"acceptance_criteria\": [\n    \"Given a clean Windows Server instance When the application installer is executed Then the installation process completes successfully.\",\n    \"Given a Windows Server environment When the system is launched Then all core services start without compatibility errors.\",\n    \"Given a non-Windows environment When the installer is executed Then the system displays a clear error message stating OS incompatibility.\"\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "id": "LIVE-04",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Component 2 traceability contract",
+      "objective": "Verify Component 2's traceability payload has the stories / gherkin_scenarios / suites / executions structure the RTM parses.",
+      "expected": "Keys stories, suites, executions present; each Gherkin scenario has id and gherkin_text.",
+      "nodeid": "tests/test_live_integration.py::test_live_c2_contract",
+      "status": "Passed",
+      "duration_ms": 0.49,
+      "failure": null,
+      "actual": "Project Infra Requirements (C1 Iteration): 4 stories, 4 Gherkin test cases, 0 suites, 0 executions; malformed: none",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-05",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Live RTM rows match Component 1 requirements",
+      "objective": "Verify the live RTM has exactly one row per Component 1 requirement with identical requirement / story fields.",
+      "expected": "Row ids == Component 1 requirement ids; text, story id/title and priority identical.",
+      "nodeid": "tests/test_live_integration.py::test_live_rows_match_c1",
+      "status": "Failed",
+      "duration_ms": 9859.08,
+      "failure": "    def test_live_rows_match_c1(scope, record):\n        items = _get(f\"{C1}/api/v1/pipeline/iterations/{scope['iteration_id']}/requirements-with-stories\").json().get(\"items\", [])\n        m = _get(f\"{RTM}/api/rtm/matrix\", **_params(scope))\n        assert m.status_code == 200, m.text\n        rows = {r[\"requirement_id\"]: r for r in m.json()[\"rows\"]}\n        mism = [i[\"requirement_id\"] for i in items if i[\"requirement_id\"] not in rows or any(\n            rows[i[\"requirement_id\"]][k] != i[k] for k in (\"requirement_text\", \"user_story_id\", \"user_story_title\", \"priority\"))]\n        record.actual(f\"Component 1 requirements: {len(items)}; RTM rows: {len(rows)}; mismatched: {mism or 'none'}\")\n        record.add(\"Live summary\", m.json()[\"summary\"])\n>       assert len(rows) == len(items) and not mism\nE       AssertionError: assert (4 == 8)\nE        +  where 4 = len({'422714c2-fcff-4a96-bc69-df189d860165': {'acceptance_criteria': ['Given an Azure account When the infrastructure is p...the installation.'], 'coverage_pct': 100.0, 'coverage_status': 'FULLY COVERED', 'covered_acceptance_criteria': 3, ...}})\nE        +  and   8 = len([{'acceptance_criteria': ['Given a clean Windows Server instance When the application installer is executed Then the i..., 'meeting_id': 'd377bab6-bde5-4b2f-a6da-c76aabbe5654', 'meeting_title': 'test meeting', 'priority': 'Must', ...}, ...])\ntests/test_live_integration.py:123: AssertionError",
+      "actual": "Component 1 requirements: 8; RTM rows: 4; mismatched: ['cc1dcc58-46e6-40c8-945e-69808eb16450', 'e80195ef-5e91-41c3-9131-90b1b2119132', 'b85b6e65-4771-4493-8d34-0682201533b5', '422714c2-fcff-4a96-bc69-df189d860165']",
+      "evidence": [
+        {
+          "label": "Live summary",
+          "value": "{\n  \"total_requirements\": 8,\n  \"fully_covered\": 8,\n  \"partially_covered\": 0,\n  \"not_covered\": 0,\n  \"total_tests\": 8,\n  \"passed_tests\": 0,\n  \"failed_tests\": 0,\n  \"pending_tests\": 8,\n  \"pass_rate\": 0.0,\n  \"defects\": 0,\n  \"avg_coverage_pct\": 100.0\n}"
+        }
+      ]
+    },
+    {
+      "id": "LIVE-06",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Live test-case linkage matches Component 2 stories",
+      "objective": "Verify every test in the live RTM belongs to the same user story in Component 2, and every Component 2 test case whose story is in the iteration appears in the RTM.",
+      "expected": "0 tests linked to the wrong story; 0 Component 2 test cases (for stories present in Component 1) missing from the RTM.",
+      "nodeid": "tests/test_live_integration.py::test_live_linkage",
+      "status": "Passed",
+      "duration_ms": 7484.29,
+      "failure": null,
+      "actual": "4 linked tests; wrong-story links: none; missing: none; Component 2 tests whose story is not in Component 1 (not shown): 0",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-07",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Live quality predictions are internally consistent",
+      "objective": "Verify the live predictions endpoint scores every Component 2 test case and that each score equals the formula applied to its returned features.",
+      "expected": "One prediction per Component 2 test case; quality_score == formula(features); formula_label consistent; predicted_label in {High, Medium, Low}.",
+      "nodeid": "tests/test_live_integration.py::test_live_predictions",
+      "status": "Passed",
+      "duration_ms": 7384.31,
+      "failure": null,
+      "actual": "4 predictions for 4 Component 2 test cases; inconsistent: none; labels: ['Medium', 'Medium', 'Medium', 'Medium']",
+      "evidence": []
+    },
+    {
+      "id": "LIVE-08",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Live coverage-gap ranking is consistent",
+      "objective": "Verify live gaps carry a risk score equal to the mean of their factors, a matching level, and are sorted by risk.",
+      "expected": "For every gap: risk_score == mean(factors), level from 70/40 bands; list non-increasing by risk.",
+      "nodeid": "tests/test_live_integration.py::test_live_gaps",
+      "status": "Passed",
+      "duration_ms": 11661.99,
+      "failure": null,
+      "actual": "8 gaps; risk scores [36.8, 36.8, 36.8, 36.8, 36.8, 36.8, 30.8, 30.8]; inconsistent: none",
+      "evidence": [
+        {
+          "label": "Top gap",
+          "value": "{\n  \"requirement_text\": \"The system must run on Windows Server.\",\n  \"risk_score\": 36.8,\n  \"risk_level\": \"Low\",\n  \"risk_factors\": {\n    \"business_priority\": 100.0,\n    \"coverage_gap\": 20.0,\n    \"acceptance_criteria_gap\": 0.0,\n    \"test_failure_rate\": 14.1,\n    \"code_coverage_gap\": 50.0\n  },\n  \"recommended_action\": \"Execute the linked test case(s) \\u2014 acceptance criteria are covered on paper but not yet verified.\"\n}"
+        }
+      ]
+    },
+    {
+      "id": "LIVE-09",
+      "module": "Live Integration",
+      "level": "live",
+      "title": "Live dashboard agrees with the live RTM",
+      "objective": "Verify the dashboard summary is built from the same live matrix.",
+      "expected": "Dashboard matrix summary == RTM matrix summary; quality buckets sum to total tests.",
+      "nodeid": "tests/test_live_integration.py::test_live_dashboard",
+      "status": "Passed",
+      "duration_ms": 25121.37,
+      "failure": null,
+      "actual": "dashboard total_tests=8, matrix total_tests=8, buckets=8; avg quality 85.9",
+      "evidence": []
+    }
+  ]
+}
